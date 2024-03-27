@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="questionnaires.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Questionnaires</title>
+    
+</head>
+
+<div class="div" id="mainSection">
+    <header class="form__header" id="header"><h2 id="header_title" class="form__title"></h2></header>
+    <section class="mainInstructions" id="consent"></section>
+</div>
+
+<div class="form" id = "questionnaire">
+    <!-- <div id="subjectID" class="subjectID">
+    </div> -->
+    <header class="form__header">
+        <h2 class="form__title" id="header">Some questions about you</h2>
+        <p class="form__instruction" id = "instruction">These questions ask you about things like personality traits and emotions</p>
+    </header>
+    <div id="questionnaires">
+    </div>
+    
+ 
+    <!-- <button type = "button" class = "submit_button" id = "continue">continue to game</button> -->
+
+
+</div>
+
+
+<script>
+
+
+function getQueryVariable(variable)
+{
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    
+    for (var i=0;i<vars.length;i++) {
+        var pair = vars[i].split("=");
+        if(pair[0] == variable){return pair[1];}
+    }
+    return(false);
+}
+
+$(document.getElementById("questionnaire")).hide()
+var subjectID
+var studyID
+var start
+var end
+var totalTime
+var nextPage
+
+var condition
+
+var uid;
+
+
+
+
+var check_consent = function (elem) {
+
+  if ($('#consent_checkbox1').is(':checked') && $('#consent_checkbox2').is(':checked') &&
+    $('#consent_checkbox3').is(':checked') && $('#consent_checkbox4').is(':checked') 
+    && $('#consent_checkbox5').is(':checked') && $('#consent_checkbox6').is(':checked')
+    && $('#consent_checkbox7').is(':checked') && $('#consent_checkbox8').is(':checked') && $('#consent_checkbox9').is(':checked')) 
+    // if (1 == 1) 
+    { // if checked everything, move on to pre-instructions
+
+        //Clear the page 
+        document.getElementById('consent').innerHTML = 	"<p><b>Thank you for agreeing to take part in this study!</b></p>"+
+	"<p>"+briefStudyDescr+"</p>" + 
+	"<p>" + 
+	"We expect this study to take around <b>"+approxTime.toString()+" minutes</b> to complete. "+
+	"Since the hourly payment rate for this study is £"+hourlyRate.toFixed(2)+", "+
+	"you will earn <b>at least £"+baseEarn.toFixed(2)+" if you complete the study "+
+	"and pass the data quality checks</b> as described on the next pages. "+
+	"</p>" + 
+	"<p>" + 
+	"<b>IMPORTANT: If you close the study tab or window in your browser your "+
+	"progress will be lost, and you will not be able to start the study again. Please "+
+	"make sure you click the final 'complete study' button at the end of the game, in order to "+
+	"submit your data back to Prolific and receive your payment.</b> "+
+	"</p>" + 
+	"<p>" + 
+	"If you experience any technical difficulties, or have any other questions about "+
+	"the study, please get in touch with us at "+
+	"<a href=\"mailto:ion.mpc.cog@ucl.ac.uk\">ion.mpc.cog@ucl.ac.uk</a>, and we will aim "+
+	"to respond to you as quickly as possible. "+
+	"</p>" + 
+	"<p>" + 
+	"Press the <b>begin study</b> button below when you are ready to start!"+
+	"</p>" + 
+	"<br>"+ 
+	"<input type=\"submit\" id=\"startStudy\" value=\"begin study\" style=\"margin-left: 40%;\">"
+
+    document.getElementById("startStudy").onclick = function(){
+
+    // study study
+    //Clear the page 
+        document.getElementById('consent').innerHTML = '';
+        document.getElementById('consent').style.margin = 0;
+        document.getElementById('consent').style.padding = 0;
+        document.getElementById('header_title').innerHTML = '';
+        document.getElementById('header_title').style.margin = 0;
+        document.getElementById('header_title').style.padding = 0;
+        var mainSection = document.getElementById('mainSection'); // KW: contains 'header_title', 'consent', 'header'
+        var header = document.getElementById('header');
+        mainSection.removeChild(header); // KW: irretrievably (?) removes header node which is a child of 'mainSection'
+        window.scrollTo(0, 0); // KW: go to top of page
+
+        
+        startQuestionnaires()
+
+    }
+       
+    }
+
+  else {
+    alert("Unfortunately you will be unable to participate in this research study. Thank you for your time.");
+    return false;
+  }
+};
+
+
+
+var approxTime = 45
+var hourlyRate = 7
+var infoSheet = "participant-information-sheet-220311_amendment_accepted_220518.pdf"
+var briefStudyDescr = "In this study, we would like to find out how people play an exploration game and how we can help them get better at this. You will fill in a quick survey, play a little game, answer some more open-ended questions, go back to the game and then finish by completing another quick survey."
+var baseEarn = hourlyRate* (approxTime/60)
+
+document.getElementById('header_title').innerHTML = "Welcome";
+    document.getElementById('consent').innerHTML = " <h2>Modular Tests of Cognitive Interventions:<br>"+
+	"		Participant Information and Consent</h2>"+ 
+	" 		<p><b>Introduction</b></p> "+ 
+	" 		<p>  " + 
+	" 		You are being invited to take part in an online research study. Before you decide to take part, it is "+
+	"		important for you to understand why the research is being done, and what taking part will involve.  "+
+	"		Please take the time to read the following information carefully, and discuss it with others if you wish. "+
+	"		Please ask us if anything is not clear or if you would like more information." + 
+	" 		</p>  " + 
+	"  " + 
+	" 		<p><b>What is the purpose of this study?</b></p> "+ 
+	" 		<p>  " + 
+	" 		We hope that this study will allow us to better understand how psychological treatments "+
+	"		(such as cognitive-behavioural therapy) work, and who they work for. In the future, this "+
+	"		knowledge may help us guide people towards psychological treatments that are more likely to work for them."+ 
+	" 		</p>  " + 
+	"  " + 
+	" 		<p><b>What is involved in the study?</b></p> "+ 
+	" 		<p>  " + 
+	" 		The study involves performing different online tasks. These may include both questionnaires and "+
+	"		different kinds of computerised games. We hope these games will help us understand how the kinds "+
+	"		of thought processes targeted by psychological treatments work."+ 
+	" 		</p>  " + 
+	"  " + 
+	" 		<p><b>Why have I been invited?</b></p> "+ 
+	" 		<p>  " + 
+	" 		In order to help us understand how these kinds of thought processes work, and how they might vary "+
+	"		across the population, we are inviting lots of different people to take part in our study. The only "+
+	"		requirements are that you are an adult (aged 18 or older) and speak fluent English. This is because "+
+	"		the different study components (questionnaires and games) are currently only available in English." + 
+	"  " + 
+	" 		<p><b>Do I have to take part?</b></p> "+ 
+	" 		<p>  " + 
+	" 		It is completely up to you to whether you decide to take part or not. You can also stop taking part "+
+	"		(withdraw) at any point without giving a reason. If this happens, you will not be penalized in any way."+
+	"		If you decide to withdraw after starting the study, we will keep any information about you that we have "+
+	"		already collected. This is to ensure the integrity of any conclusions drawn from the research data. "+
+	"		If you wish your data to be deleted, please email us at "+
+	"		<a href=\"mailto:ion.mpc.cog@ucl.ac.uk\">ion.mpc.cog@ucl.ac.uk</a>."+ 
+	"  " + 
+	" 		<p><b>What will happen if I decide to take part?</b></p> "+ 
+	" 		<p>  " + 
+	"		If you decide to take part, we will first ask you to fill out an online consent form, confirming you "+
+	"		have been made aware of your rights as a research participant. We may then ask you to provide some "+
+	"		background information about yourself (e.g., your age and gender). We will not ask you to provide any "+
+	"		identifying information, such as your name or phone number."+
+	" 		</p>  " + 
+	" 		<p>  " + 
+	"		You will then be asked to play some online games, that will help us better understand how different "+
+	"		people learn and make decisions. For example, one game might involve learning how to choose between "+
+	"		different coloured shapes, in order to win bonus rewards. Another game might involve deciding which "+
+	"		different computer characters to trust to share your rewards with. At certain points, you may be asked "+
+	"		to take part in short tasks that mimic parts of common psychological treatments. For example, you be asked "+
+	"		to watch a short animation involving some of the computer characters you met before, and asked to reflect "+
+	"		on how you feel about them."+
+	" 		</p>  " + 
+	" 		<p>  " + 
+	"		Finally, we may ask you to fill out some questionnaires that ask about your feelings and mood, personality "+
+	"		(how you tend to think and act in different situations), or thinking styles (how you tend to think about "+
+	"		the world)."+
+	" 		</p>  " + 
+	" 		<p>  " + 
+	"		Overall, these different tasks should take about <b>"+approxTime.toString()+" minutes</b>. You can take a "+
+	"		break at different points during the tasks, and complete the questionnaires at a pace that suits you."+
+	" 		</p>  " + 
+	"  " + 
+	" 		<p><b>What are the possible disadvantages and risks of taking part?</b></p>"+ 
+	" 		<p>  " + 
+	" 		<b>Risks related to filling out the questionnaires</b>. Some of the questionnaires may ask about your "+
+	"		feelings and mood, including stress, worry, and feeling low. Please note that none of these questionnaires"+
+	"		are sufficient by themselves to diagnose mental health problems, therefore we will not be providing any "+
+	"		feedback based on your responses. However, if you become upset at any point when answering these questions, "+
+	"		or are concerned about your mental health for any other reason, we recommend the below resources for further "+
+	"		information. You may also wish to discuss any concerns with your family doctor."+ 
+	" 		</p>  " +
+	"		<ul>  " +
+	"		<p><li><a href=\"http://mind.org.uk\">Mind Charity</a></li></p>"+
+	"		<p><li><a href=\"https://www.samaritans.org\">The Samaritans</a></li></p>"+
+	"		<p><li><a href=\"https://www.nhs.uk/mental-health\">NHS Choices mental health page</a></li></p>"+
+	"		</ul>  " +
+	" 		<p>  " + 
+	"		Please also note that although taking part in this study might involve experience of elements of common "+
+	"		evidence-based psychological treatments, this in itself is not expected to lead to any substantial or "+
+	"		meaningful improvement in any psychological symptoms you might experience."+
+	" 		</p>  "+ 
+	" 		<p>  " + 
+	"		If at any point during completion of the study you have thoughts of harming yourself, please go "+
+	"		immediately to your nearest emergency department, or call 999."+
+	" 		</p>  " + 
+	" 		<p>  " + 
+	"		<b>Risks related to your personal data</b>. In any research study that collects sensitive data, "+
+	"		there is a risk of loss of private information. Although we will not attempt to collect any identifying "+
+	"		information as part of this study, this risk always exists. There are procedures in place to minimize "+
+	"		this risk."+
+	" 		</p>  " + 
+	" 		<p>  " + 
+	"		<b>Risks related to public sharing of anonymized data</b>. To do more powerful research, it is helpful for "+
+	"		researchers to share information. They do this by putting it into scientific databases, where it is stored "+
+	"		along with information from other studies. Researchers can then study the combined information to learn even "+
+	"		more about health and disease. If you agree to take part in this study, some of your anonymized information "+
+	"		might be placed into one or more scientific databases. Researchers will always have a duty to protect your "+
+	"		privacy and to keep your information confidential, but there are risks associated with data sharing. "+
+	"		For example, although we will not share with other researchers your name or other identifying details, your "+
+	"		data may be linked to information such as your race, ethnic group, or gender. This information helps "+
+	"		researchers learn whether the factors that lead to health problems are the same in different groups of people. "+
+	"		It is possible that such findings could one day help people of the same race, ethnic group, or gender as you. "+
+	"		However, they could also be used to support harmful stereotypes or even promote discrimination."+
+	" 		</p>  "+ 
+	"  " + 
+	" 		<p><b>What are the possible benefits of taking part?</b></p>"+ 
+	" 		<p>  " + 
+	" 		There are no expected benefits to you from taking part. However, we hope that in the future results of this "+
+	"		study might help us improve the effectiveness of psychological treatments for common mental health problems."+
+	"  " + 
+	"		You will be reimbursed for the time you spend taking part in the study a rate equivalent to "+
+	"		<b>£"+hourlyRate.toFixed(2)+" per hour</b>. "+
+	"		If you decide to withdraw from the study before the end you will be reimbursed for the parts you completed."+
+	" 		</p>  " + 
+	"  " + 
+	" 		<p><b>What will happen to the results from the study?</b></p>"+ 
+	" 		<p>  " + 
+	" 		We plan to report our findings in scientific journals and present them to researchers at meetings and "+
+	"		conferences. You will not be identified in any reports or publications from the study. If you would like "+
+	"		to be informed of the results of this study, please inform the researcher. To make the best use of the "+
+	"		data, we may make fully anonymised data available for further research and such data will be kept "+
+	"		indefinitely. Shared data will not contain any information that could be used to identify you. "+ 
+	"		</p>  "+ 
+	"  " + 
+	" 		<p><b>What if something goes wrong?</b></p>"+ 
+	" 		<p> "+
+	"		If you have any comments or concerns about any aspect of the study (e.g., the way you have been approached or"+
+	"		treated during the study) you may speak to the Chief Investigator, "+
+	"		<a href=\"mailto:q.huys@ucl.ac.uk\">Dr Quentin Huys</a>. If you wish to make a formal complaint, please "+
+	"		write to us at the Max Planck UCL Centre for Computational  Psychiatry and Ageing Research, Russell Square "+
+	"		House, London WC1B 5EH. If you feel that your complaint has not been handled to your satisfaction, "+
+	"		you can contact the chair of the <a href=\"mailto:ethics@ucl.ac.uk\">UCL Research Ethics Committee</a> "+
+	"		(+44 (0)20 7679 8717)."+ 
+	"  " + 
+	" 		<p><b>Will my taking part in this project be kept confidential?</b></p>"+ 
+	" 		<p>  " + 
+	" 		All the information that we collect during the course of the research will be kept strictly confidential. "+
+	"		Professional standards of confidentiality will be adhered, and the handling, processing, storage and "+
+	"		destruction of data will be conducted in accordance with the relevant information governance legislation."+
+	"		Data may be looked at by responsible individuals from the sponsor for the purpose of monitoring and auditing "+
+	"		or from regulatory authorities. This data will only be linked to a code and not your name. You will not be "+
+	"		able to be identified in any ensuing reports or publications. Any information made available for research "+
+	"		purposes will be done so in a coded form so that confidentiality is strictly maintained." + 
+	"		</p>  "+ 
+	"  " + 
+	" 		<p><b>Local Data Protection Privacy Notice</b></p>"+ 
+	" 		<p>  "+ 
+	" 		The controller for this project will be University College London (UCL). The UCL Data Protection Officer "+
+	"		provides oversight of UCL activities involving the processing of personal data, and can be contacted at "+
+	"		<a href=\"mailto:data-protection@ucl.ac.uk\">data-protection@ucl.ac.uk</a>. This ‘local’ privacy notice sets "+
+	"		out the information that applies to this particular study. Further information on how UCL uses participant "+
+	"		information can be found in our ‘general’ privacy notice "+
+	"		<a href=\"https://www.ucl.ac.uk/legal-services/privacy/ucl-general-research-participant-privacy-notice\">here</a>."+
+	"		The information that is required to be provided to participants under data protection "+
+	"		legislation (GDPR and DPA 2018) is provided across both the ‘local’ and ‘general’ privacy notices. "+
+	"		If you are concerned about how your personal data is being processed, or if you would like to contact us "+
+	"		about your rights, please contact UCL in the first instance at "+
+	"		<a href=\"mailto:data-protection@ucl.ac.uk\">data-protection@ucl.ac.uk</a>. " + 
+	"		</p>  "+ 
+	"  " + 
+	" 		<p><b>Who is organising and funding the research?</b></p>"+ 
+	" 		<p>  "+ 
+	" 		This study is organised by Dr Quentin Huys and colleagues at the Max Planck UCL Centre for Computational "+
+	"		Psychiatry and Ageing Research at UCL. The study is sponsored by University College London and financially "+
+	"		supported by the Conny Maeva Charitable Foundation, the Wellcome Trust, and Koa Health." + 
+	"		</p>  "+ 
+	"  " + 
+	" 		<p><b>If I have further questions, who I can talk to?</b></p>  "+ 
+	" 		<p>  " + 
+	"		If you have any further questions or comments, please contact us at the Max Planck Centre for Computational "+
+	"		Psychiatry and Ageing Research at University College London on +44 (0)203 108 7538 or email us on "+
+	"		<a href=\"mailto:ion.mpc.cog@ucl.ac.uk\">ion.mpc.cog@ucl.ac.uk</a>." + 
+	"		</p>  " + 
+	" 		<p style=\"background-color:powderblue;\">  "+ 
+	"  " + 
+	" 		<b>Please <a href="+infoSheet+" download>download and save</a>"+
+	" 		a copy of this Information Sheet for your records.</b>"+
+	"  " + 
+	" 		</p>  " + 
+	"  " + 
+	" 		<p><b>To indicate your consent to take part in this study, please read the statements below and tick the box"+
+	"		if you agree with each statement. You can only take part in the study if you agree with all the statements.</b></p> "+ 
+	"  " + 
+	" 		</p>  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox1\">  " + 
+	" 		I have read and understood the above Information Sheet (Version 2, 11/03/2022)."+
+	"		I have had an opportunity to consider the information and what will be expected of me. "+
+	"		I have also had the opportunity to ask questions which have been answered to my satisfaction." + 
+	" 		<span class=\"checkmark\"></span>  " + 
+	" 		</label>  " + 
+	" 		<br> <br> " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox2\">  " + 
+	" 		I consent to the processing of my personal data for the purposes explained to me in the "+
+	"		Information Sheet. I understand that my information will be handled in accordance with all"+
+	"		 applicable data protection legislation and ethical standards in research." + 
+	" 		<span class=\"checkmark\"></span>  " + 
+	" 		</label> <br><br> " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox3\">  " + 
+	" 		I understand that I am free to withdraw from this study at any time without giving a "+
+	"		reason and this will not affect my future medical care or legal rights." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox4\">  " + 
+	" 		I understand the potential benefits and risks of participating, the support available "+
+	"		to me should I become distressed during the research, and whom to contact if I wish to lodge a complaint." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox5\">  " + 
+	" 		I understand the inclusion and exclusion criteria set out in the Information Sheet. "+
+	"		I confirm that I meet the inclusion criteria." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox6\">  " + 
+	" 		I understand that my anonymised personal data can be shared with others for future research, "+
+	"		shared in public databases, and in scientific reports." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox7\">  " + 
+	" 		I understand that the data acquired is for research purposes and agree to it being kept "+
+	"		and analysed even if and after I withdraw from the study." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox8\">  " + 
+	" 		I am aware of who I can contact should I have any questions or if any issues arise." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	"  " + 
+	" 		<label class=\"container\"> " + 
+	" 		<input type=\"checkbox\" id=\"consent_checkbox9\">  " + 
+	" 		I voluntarily agree to take part in this study." + 
+	" 		<span class=\"checkmark\"></span> <br><br> " + 
+	" 		</label>  " + 
+	" 		<br>  " + 
+	"		<input type=\"submit\" id=\"start\" value=\"continue\" style=\"margin-left: 40%;\">"+
+	" 		<br><br> " 
+
+    document.getElementById("start").onclick = check_consent;
+
+
+
+
+var questionnaire_data
+var submitted = false
+var attention
+
+function saveData(filedata){
+    var filename = "../data/" + subjectID + "data_1_attention_" + attention + ".txt";
+    $.post("results_data.php", {postresult: filedata + "\n", postfile: filename })
+    
+    
+}
+// function saveData(filedata){
+//     var filename = "./data/" + subjectID + "data_1" +"_attention" + attention + ".txt";
+//     $.post("results_data.php", {postresult: filedata + "\n", postfile: filename })
+
+// }
+
+function createQuestion(questionnaireName, questionData) {
+    // This function creates an individual item
+
+    var f = document.createElement("form");
+    f.setAttribute('method',"post");
+    f.setAttribute('action',"submit.php");
+    f.setAttribute('id', questionnaireName.concat('_' + questionData.qNumber.toString()));
+    f.setAttribute("name", "form_");
+
+    var fieldset = document.createElement("fieldset");
+    fieldset.setAttribute("class", "form__options");
+    fieldset.setAttribute('id', questionnaireName.concat('_' + questionData.qNumber.toString()));
+    fieldset.setAttribute("name", "fs_");
+
+    var legend = document.createElement("legend");
+    legend.setAttribute("class", "form__question");
+    legend.setAttribute("name", "legend");
+    legend.append(questionData.prompt);
+
+    fieldset.appendChild(legend);
+
+    var labels = [];
+
+    for (i = 0; i < questionData.labels.length; i++) {
+
+        var p = document.createElement("p");
+        p.setAttribute('class', 'form__answer');
+        var c = document.createElement("input");
+        c.type = "radio";
+        c.id = questionnaireName.concat(questionData.qNumber.toString()).concat("answer".concat(i.toString()));
+        c.name = "question";
+        c.value = i;
+
+        var l = document.createElement("label");
+        l.setAttribute('for', c.id);
+        l.setAttribute("style", "margin:-10px; padding: 18px 10px 50px 10px")
+        l.append(questionData.labels[i]);
+
+        p.appendChild(c);
+        p.appendChild(l);
+
+        labels.push(p);
+
+        fieldset.appendChild(p)
+
+    }
+
+    f.appendChild(fieldset);
+
+
+    return f;
+
+}
+
+function createQuestion_slider(questionnaireName, questionData) {
+
+
+    var shockForm = document.createElement("form");
+    shockForm.setAttribute('method',"post");
+    shockForm.setAttribute('id', questionnaireName.concat('_' + questionData.qNumber.toString()));
+    shockForm.setAttribute("name", "form_");
+    shockForm.setAttribute('action',"submit.php");
+
+    var shockFieldSet = document.createElement("fieldset");
+    shockFieldSet.setAttribute("class", "form__options");
+    shockFieldSet.setAttribute('id', questionnaireName.concat('_' + questionData.qNumber.toString()));
+    shockFieldSet.setAttribute("name", "fs_");
+
+    var legendShock = document.createElement("legend");
+    legendShock.setAttribute("class", "questionDemo");
+    legendShock.setAttribute("name", "legend");
+    legendShock.innerHTML = questionData.prompt;
+
+    shockFieldSet.appendChild(legendShock);
+
+    var sliderBox = document.createElement("div");
+    sliderBox.setAttribute("class", "slidecontainer");
+
+    var slider = document.createElement("input");
+    slider.setAttribute("type", "range");
+    slider.setAttribute("min", "0");
+    slider.setAttribute("max", "100");
+    slider.setAttribute("class", "slider");
+    slider.setAttribute("id", questionnaireName.concat('_' + questionData.qNumber.toString()));
+    slider.name = 'question';
+
+    var sliderLabelLeft = document.createElement("p");
+    sliderLabelLeft.setAttribute("class", "sliderLabel");
+    sliderLabelLeft.append(questionData.labels[0]);
+    var sliderLabelRight = document.createElement("p");
+    sliderLabelRight.setAttribute("class", "sliderLabel");
+    sliderLabelRight.append(questionData.labels[1]);
+
+    sliderBox.appendChild(sliderLabelLeft);
+    sliderBox.appendChild(slider);
+    sliderBox.appendChild(sliderLabelRight);
+
+    shockFieldSet.appendChild(sliderBox);
+
+    shockForm.appendChild(shockFieldSet);
+    return shockForm
+}
+
+function createPreamble(preamble) {
+    // This is used to generate an introduction to the the questionnaire
+    var h = document.createElement("header");
+    h.setAttribute("class", "form__header");
+    h.setAttribute("name", "fs_");
+
+    var p = document.createElement("p");
+    p.setAttribute("class", "preamble");
+
+    var div = document.createElement("div");
+    div.innerHTML = preamble;
+
+    p.appendChild(div);
+    h.appendChild(p);
+
+    return h
+
+}
+
+
+function createQuestionnaire(questionnaire_data) {
+    // This function creates an entire questionnaire
+
+    // Start with the introduction
+    var preamble = createPreamble(questionnaire_data.preamble);
+    document.getElementById('questionnaires').appendChild(preamble);
+
+    // Loop through the items and add them
+    for (j = 0; j < questionnaire_data.questions.length; j++) {
+
+        questionnaire_data.questions[j].qNumber = j;
+
+        if (j < questionnaire_data.questions.length - 1) {
+            next = questionnaire_data.name.concat((j+1).toString());
+        }
+
+        document.getElementById('questionnaires').appendChild(createQuestion(questionnaire_data.name,
+            questionnaire_data.questions[j], next));
+
+    }
+
+}
+
+function createQuestionnaire_slider(questionnaire_data) {
+    // This function creates an entire questionnaire
+
+    // Start with the introduction
+    var preamble = createPreamble(questionnaire_data.preamble);
+    document.getElementById('questionnaires').appendChild(preamble);
+
+    // Loop through the items and add them
+    for (j = 0; j < questionnaire_data.questions.length; j++) {
+      
+        questionnaire_data.questions[j].qNumber = j;
+
+        if (j < questionnaire_data.questions.length - 1) {
+            next = questionnaire_data.name.concat((j+1).toString());
+        }
+
+        document.getElementById('questionnaires').appendChild(createQuestion_slider(questionnaire_data.name,
+            questionnaire_data.questions[j], next));
+
+    }
+
+}
+
+function createDemographics() {
+            // This creates demographics questions
+            // This isn't automatically generated from a JSON file - these are entered manually here
+        
+            var preamble = createPreamble("First, we need some information about you");
+        
+            document.getElementById('questionnaires').appendChild(preamble);
+        
+        
+            // Sex
+            qDataSex = {
+                qNumber: 0,
+                prompt: "What is your sex?",
+                labels: ['Male', 'Female', 'Other']
+            };
+        
+            sexQuestion = createQuestion('Sex', qDataSex);
+            document.getElementById('questionnaires').appendChild(sexQuestion);
+        
+        
+            // Age
+            var ageForm = document.createElement("form");
+            ageForm.setAttribute('method',"post");
+            ageForm.setAttribute('id', "age");
+            ageForm.setAttribute("name", "form_");
+        
+            var ageFieldSet = document.createElement("fieldset");
+            ageFieldSet.setAttribute("class", "form__options");
+            ageFieldSet.setAttribute('id', "age");
+            ageFieldSet.setAttribute("name", "fs_");
+        
+            var legendAge = document.createElement("legend");
+            legendAge.setAttribute("class", "questionDemo");
+            legendAge.append("How old are you?");
+            legendAge.setAttribute("name", "legend");
+            legendAge.name = 'question';
+        
+            ageFieldSet.appendChild(legendAge);
+        
+            var box = document.createElement("input");
+            box.setAttribute("class", "textEntry");
+            box.setAttribute("type", "text");
+            box.setAttribute("id", "Age");
+            box.name = 'question';
+        
+            ageFieldSet.appendChild(box);
+        
+            ageForm.appendChild(ageFieldSet);
+            document.getElementById('questionnaires').appendChild(ageForm);
+        
+        }
+
+function getValues() {
+    // This function gets the recorded values for every item
+    // As it goes through, it highlights any items that weren't answered in red
+    // And then scrolls to them on completion
+
+    // All items have an ID starting with fs_
+    submitted = true
+    var inputs = document.getElementsByName("fs_");
+
+    // Loop through the items nad get their values
+    values = {};
+    incomplete = [];
+
+    for (i = 0; i < inputs.length; i++) {
+
+        if (inputs[i].id.length > 0) {
+            
+            // Get responses to questionnaire items
+            id = inputs[i].id;
+            legend = inputs[i].querySelectorAll('[name="legend"]')[0];
+
+            checked = inputs[i].querySelector('input[name="question"]:checked');
+
+            if (checked != null) {
+                legend.style.color = "#000000";
+                value = checked.value;
+                values[id] = value;
+                
+            }
+
+            // Get responses to text items
+            else if (inputs[i].querySelector('input[type="text"]')) {
+
+                value = inputs[i].querySelector('input[type="text"]').value;
+                if (value.length == 0) {
+
+                    legend.style.color = "#ff0000";
+                    incomplete.push(id);
+                }
+
+                else {
+                    legend.style.color = "#000000";
+                    values[id] = value;
+                }
+            }
+
+            // Get responses to slider items
+            else if (inputs[i].querySelector('input[type="range"]')) {
+                value = inputs[i].querySelector('input[type="range"]').value;
+                values[id] = value;
+
+            }
+
+            else {
+                legend.style.color = "#ff0000";
+                incomplete.push(id);
+            }
+
+            values[id] = parseInt(values[id]);
+        }
+
+    }
+
+    // This checks for any items that were missed and scrolls to them
+    if (incomplete.length > 0) {
+
+        $('html, body').animate({ // go to first missed items
+                scrollTop: $(document.getElementById(incomplete[0])).offset().top - 100
+                }, 400);
+       
+
+        if(incomplete.length > 1){ // if you missed more than one item
+           
+            for (i = 0; i < incomplete.length -1; i++){ // loops through all missed questions and attaches an event listener to each of them
+            
+            $(document.getElementById(incomplete[i])).children().click(function (e) { 
+                var target = e.target.parentElement.parentElement.parentElement.id // name of the given question
+                var n = incomplete.indexOf(target)// I can't simply use i as the index as it is already done with the loop by the time one clicks
+                var nextMiss = document.getElementById(incomplete[n+1])
+                $('html, body').animate({ // go to next question
+                scrollTop: $(nextMiss).offset().top - 100
+                }, 400);
+            });
+
+            }
+        }
+
+        
+
+        
+      }
+         
+    
+
+    // If everything is complete, save the data
+    else {
+
+        end = Number(new Date());
+        totalTime = (end - start)/60000; // time it took in minutes instead of milliseconds
+        values["rt"] = totalTime;
+
+        // do attention check
+
+        attention = 0
+        
+        if (values["MCQ_30"] == "3"){
+            attention += 1
+        }
+        if (values["CAS_7"] == "0"){
+            attention += 1
+        }
+
+        values["attention"] = attention;
+        values["start"] = start;
+      
+        // docRef.update({
+        //     questionnairesPre: values
+        // }).then(
+        //     function() {
+        //         // If saving worked, move to the next page
+        //         window.location.href = nextPage;
+        //     }
+
+        // ).catch(function(error) {
+        //     // If writing failed, move on but also throw an error
+        //     console.error("Error writing document: ", error);
+        //     window.location.href = nextPage;
+        //     })
+        //console.log(values)
+        var valuesAsJSON = JSON.stringify(values);
+        console.log(valuesAsJSON)
+        saveData(valuesAsJSON.toString());
+
+       // wait 500ms before letting them go back to prolific bc want to make sure data is getting saved
+        setTimeout(function(){
+
+            $(document.getElementById("questionnaires")).hide()
+            $(document.getElementById("header")).hide()
+            
+
+            nextPage = "game.html?" + "PROLIFIC_PID=" + subjectID;
+            document.getElementById('instruction').innerHTML = 'Please click <a href="' + nextPage + '">here</a> to continue the study';
+
+        }, 500);
+       
+
+       
+        
+    }
+
+
+}
+    
+var startQuestionnaires = function(uid) {
+
+    
+
+    // GET URL VARIABLES
+    // Get Prolific ID from URL
+    if (window.location.search.indexOf('PROLIFIC_PID') > -1) {
+        subjectID = getQueryVariable('PROLIFIC_PID');
+    }
+    // If no ID is present, generate one using random numbers - this is useful for testing
+    else {
+        subjectID = 'test-' + Math.floor(Math.random() * (2000000 - 0 + 1)) + 0; 
+    }
+        condition
+    // get condition from URL (only for demo purposes)
+    if (window.location.search.indexOf('condition') > -1) {
+        condition = getQueryVariable('condition');
+        
+    } else {
+        condition = 0
+    }
+    // docRef.set({
+    //     subjectID: subjectID,
+    //     date: new Date().toLocaleDateString(),
+    //     time: new Date().toLocaleTimeString()
+    //     }).catch(err => {
+    //         // If this fails for some reason, show an error
+    //         alert("Something went wrong, sorry. Please contact us on Prolific");
+    //         console.log(err);
+    //     })
+
+    start = Number(new Date()); // time how long they take for the questionnaires
+
+
+    $(document.getElementById("questionnaire")).show()
+
+
+    // Load questionnaires
+    $.getJSON('questionnaires.json', function (data) {
+        // THis function creates the whole questionnaire
+        // document.getElementById("continue").style.display = "none"
+        questionnaire_data = data;
+
+        var fullurl = window.location.href;
+
+
+        // extract URL parameters (FROM: https://s3.amazonaws.com/mturk-public/externalHIT_v1.js)
+        function turkGetParam(name) {
+        var regexS = "[\?&]" + name + "=([^&#]*)";
+        var regex = new RegExp(regexS);
+        if (typeof fullurl == "undefined"){ // I added this part to the original code bc otherwise it would throw errors when running it locally
+
+            return Math.floor(Math.random() * 10000);
+
+        } else {
+            var tmpURL = fullurl;
+            var results = regex.exec(tmpURL);
+            if (results == null) {
+                return Math.floor(Math.random() * 10000);
+            } else {
+                return results[1];
+        }
+        }
+    }
+
+        
+
+
+
+        // This creates questions to ask about demographic information
+        createDemographics();
+
+        // THis creates every questionnaire of interest
+        // A smarter way to do this would be to shuffle the keys of the questionnaire_data object
+        // and then loop through them, rather than creating them all individually as I've done here
+
+
+        createQuestionnaire(questionnaire_data.MCQ);
+        createQuestionnaire(questionnaire_data.MWQ);
+        createQuestionnaire_slider(questionnaire_data.MWQ_2);
+        createQuestionnaire_slider(questionnaire_data.CAS);
+
+
+        // This next section just deals with scrolling between items automatically (but not if we are scrolling through missed items)
+        
+        
+
+        // this makes it move to next question (had to put this piece of code here bc it needs the questionnaire element being displayed to work)
+        var forms = document.getElementsByName("fs_");
+
+        for (i = 3; i < forms.length; i++) {
+            // Generate function to scroll to next question if we're not on the last question
+            if (i < forms.length - 1) {
+                forms[i].setAttribute("scrollPos", $(forms[i + 1]).offset().top - 200);
+
+                $(forms[i]).children().children().click(function () {
+                    if (!submitted){ //if submit has been pressed, the other scroll on function in the getValues function does the job
+                    $('html, body').animate({
+                        scrollTop: $(this).parent().parent().attr("scrollPos")
+                    }, 400);
+
+                    
+                }
+                });
+            }
+        }
+
+        // Create the submit button
+        var submit = document.createElement('button');
+        submit.setAttribute("class", "submit_button");
+        submit.setAttribute("type", "button");
+        submit.setAttribute("id", "submit");
+        submit.append("Submit");
+
+        var submit_form = document.createElement("form");
+        submit_form.setAttribute("class", "submitContainer");
+        submit_form.appendChild(submit);
+        document.getElementById('questionnaires').appendChild(submit_form);
+
+        // Function to call when the submit button is clicked
+        document.getElementById('submit').onclick = getValues;
+
+    });
+
+}
+
+
+
+
+
+</script>
+
+
+<!-- <div id="surveyElement"></div>
+<div id="surveyResult" style='display:none'></div>
+<div style="width:50px;margin:0 auto; display:none" id = 'gridsearchButton'>
+  <a href="index.html" id="gridsearchLink"><button class ="btn btn-success">continue to game</button></a> 
+</div> -->
