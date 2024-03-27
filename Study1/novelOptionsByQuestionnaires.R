@@ -3,7 +3,7 @@
 library(brms)
 
 ###### importing and formatting data #########
-setwd("/Users/kristinwitte/Documents/exploration_worries")
+setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
 load("Study1/master.Rda")
 
 

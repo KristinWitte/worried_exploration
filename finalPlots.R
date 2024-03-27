@@ -9,7 +9,7 @@ library(gghalves)
 library(knitr)
 library(docstring)
 
-setwd("/Users/kristinwitte/Documents/exploration_worries")
+setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
 
 ############## get data ##################
 load("Study1/master.Rda")

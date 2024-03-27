@@ -5,7 +5,7 @@ library(brms)
 
 
 ########## loading data and prepping it ########
-setwd("/Users/kristinwitte/Documents/exploration_worries")
+setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
 load("Study1/master.Rda")
 
 df <- read.csv(paste("Study1/estimatesCB_n.csv", sep = ""))

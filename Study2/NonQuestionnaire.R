@@ -4,7 +4,7 @@ library(plyr)
 library(brms)
 library(ggpubr)
 library(gghalves)
-setwd("/Users/kristinwitte/Documents/exploration_worries")
+setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
 se<-function(x){sd(x, na.rm = T)/sqrt(length(na.omit(x)))}
 meann <- function(x){mean(x, na.rm = T)}
 load("Study2/Master.Rda")

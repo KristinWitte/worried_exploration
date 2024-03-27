@@ -1,7 +1,7 @@
 ############ Comparing the probability of selecting a novel option in the safe vs the risky condition ##########
 
 library(brms)
-setwd("/Users/kristinwitte/Documents/exploration_worries")
+setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
 load("Study1/master.Rda")
 
 
