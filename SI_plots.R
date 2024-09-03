@@ -1,4 +1,5 @@
-######################### final plots for the combined project ######################
+################ SI plots and tables ###################
+
 
 library(ggplot2)
 theme_set(theme_classic(base_size = 15))
@@ -8,8 +9,9 @@ library(plyr)
 library(gghalves)
 library(knitr)
 library(docstring)
+library(here)
+library(tidyverse)
 
-setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
 
 ############## get data ##################
 load("Study1/master.Rda")
@@ -62,8 +64,8 @@ errorBarPlot <- function(df, title = waiver(), xlabel = expression(beta~"-Coeffi
     theme(legend.position = "none") +
     geom_vline(xintercept = 0) + 
     labs(title = title, 
-          x = xlabel, 
-          y = ylabel)+
+         x = xlabel, 
+         y = ylabel)+
     scale_size_manual(breaks = c(0,1), values = c(1, 1.8))
   
   return(p2)
@@ -73,203 +75,6 @@ errorBarPlot <- function(df, title = waiver(), xlabel = expression(beta~"-Coeffi
 
 
 
-
-
-############# Figure 1: learning curves ##############
-
-# first two subplots are screenshots of the task and added in powerpoint
-
-## study 1 rewards over clicks
-
-
-meanmean <- ddply(Master1[Master1$blocknr != 6, ], .(click, krakenPres), summarize, se = se(na.omit(z)), z = mean(z, na.rm = TRUE))
-
-
-p1 <- ggplot(data = meanmean, aes(x = click, y = z, color = krakenPres)) +
-  geom_point()+
-  geom_line(size = 1) +
-  geom_linerange(aes(ymin = z - se, ymax = z+se)) +
-  scale_x_continuous(breaks = round(seq(1,11, by = 1),1)) +
-  labs(title = "Mean rewards over clicks study 1",
-       y = "Rewards ± SE",
-       x = "Click") +
-  scale_color_manual(values = c(darkBlue, red), name = "Condition") +
-  theme(legend.position = c(0.9,0.2))
-p1
-
-meanmean <- ddply(Master[Master$block != 6, ], .(trial, cond), summarize, se = se(na.omit(z)), z = mean(z, na.rm = TRUE))
-
-
-p2 <- ggplot(data = meanmean, aes(x = trial, y = z, color = cond)) +
-  geom_point()+
-  geom_line(size = 1) +
-  geom_linerange(aes(ymin = z - se, ymax = z+se)) +
-  scale_x_continuous(breaks = round(seq(1,26, by = 1),1)) +
-  labs(title = "Mean rewards over clicks study 2",
-       y = "Rewards ± SE",
-       x = "Click") +
-  scale_color_manual(values = c(control, red), name = "Condition") +
-  theme(legend.position = c(0.9,0.2))
-p2
-
-
-ggarrange(p1, p2, ncol = 2, nrow = 1, labels = c("C", "D"), widths = c(0.5, 1))
-
-############# Figure 2: Study 1 NUO, NUO ~Q , Study 2 Nerv, NUO over blocks, NUO ~nerv ##############
-################ St1 NUO
-
-d2<-ddply(Master1[Master1$blocknr != 6, ], ~krakenPres+ID, summarize, mu=mean(unique, na.rm=TRUE), se=se(na.omit(unique)))
-p1 <- ggplot(d2, aes(y=mu, x=krakenPres)) +
-  geom_half_violin(side = c("l", "r"), aes(fill = krakenPres))+
-  geom_boxplot(width = 0.05) +
-  geom_line(aes(x = c(rep(c(1.2, 1.8), each = (nrow(d2)/2))), group = ID), alpha = 0.2) + 
-  geom_jitter(aes(x = c(rep(c(1.1, 1.9), each = (nrow(d2)/2))), color = krakenPres), alpha = 0.2, width = 0.05)+
-  scale_fill_manual(name = "Condition", values = c(darkBlue, red))+
-  scale_color_manual(name = "Condition", values = c(darkBlue, red))+
-  #title
-  labs(title = "Proportion of novel options selected", 
-       x = "Condition", 
-       y = "P(novel)")+
-  theme(legend.position = "none")+
-  #scale_x_discrete(labels = c("safe", "risky"))+
-  #adjust text size
-  scale_y_continuous(expand = c(0, 0))
-
-p1
-
-
-######### St1 NUO ~Q
-
-load("Study1/NUOQs.Rda")
-
-main <- rbind(Sc$fixed[c(3), ],Ss$fixed[c(3), ], C$fixed[c(3), ], I$fixed[c(3), ], R$fixed[c(3), ], P$fixed[c(3), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
-
-p2 <- errorBarPlot(df, title = "Main effects of questionnaires on P(novel)")
-p2
-
-# extract interaction with condition
-
-interact <- rbind(Sc$fixed[7, ],Ss$fixed[7, ], C$fixed[c(7), ], I$fixed[c(7), ], R$fixed[c(7), ], P$fixed[c(7), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
-                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
-
-p3 <- errorBarPlot(df, title = "Interaction effects with condition on P(novel)")
-
-p3
-
-######## St2 nervous
-nervous$round <- rep(c(2, 4, 6, 7, 9, 11), nrow(nervous)/6)
-df <- ddply(nervous, ~cond+round, summarise, se = se(nervous), nervousness = meann(nervous))
-df$block <- rep(c(-5, -3, -1, 1, 3, 5),2)
-
-Nerv <- ggplot(df, aes(block, nervousness, color = cond)) + geom_line(size = 1.5) +
-  geom_linerange(aes(ymin = nervousness -se, ymax = nervousness+se), size = 1.5) +
-  geom_point(size = 1.5) +
-  geom_vline(xintercept = 0)+
-  labs(title = "Nervousness",
-       x = "Block since intervention",
-       y = "Nervousness ± SE")+
-  scale_x_continuous(breaks = c(seq(-5,-1), seq(1,5)))+
-  scale_color_manual(name = "Condition", values = c(control, red))+
-  theme(legend.position = c(0.2, 0.2),
-        axis.title.y = element_text(margin = margin("l" = 7, "r"= 5)),
-        legend.background = element_rect(fill = "transparent"))
-
-Nerv
-
-
-
-### St2 NUO
-df <- ddply(Master, ~cond+block, summarise, se = se(unique), Punique = mean(na.omit(unique)))
-df$block <- rep(c(seq(-5,-1), seq(1,5)),2)
-
-NUO <- ggplot(df, aes(block, Punique, color = cond)) + geom_line(size = 1.5) +
-  geom_linerange(aes(ymin = Punique -se, ymax = Punique+se), size = 1.5) +
-  geom_point(size = 1.5) +
-  geom_vline(xintercept = 0)+
-  labs(title = "Proportion of novel options selected",
-       x = "Block since intervention",
-       y = "P(novel) ± SE")+
-  scale_x_continuous(breaks = c(seq(-5,-1), seq(1,5)))+
-  scale_color_manual(name = "Condition", values = c(control, red))+
-  theme(legend.position = c(0.2, 0.2),
-        axis.title.y = element_text(margin = margin("l" = 22, "r" = 5)),
-        legend.background = element_rect(fill = "transparent"))
-
-NUO
-
-
-## exploration ~ nervous
-load("Study2/nervousByInterv.Rda")
-
-nerv <- summary(model)
-
-main <- nerv$fixed[c(2,7:10), ]
-df <- data.frame(var = c("nervousness", "nervousness*condition", "nervousness*time point", "intervention", "nervousness*intervention"), 
-                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
-
-p4 <- errorBarPlot(df, title = "Effects of nervousness on P(novel)")
-
-p4
-
-ggarrange(p1,p2,p3,Nerv,p4,NUO, nrow = 2, ncol = 3, widths = c(0.6, 0.9, 0.8, 0.6, 0.9, 0.8), labels = "AUTO")
-
-
-##################### Figure 3: St1 eta ~Q, St2 eta ################# 
-
-
-############### St1 eta ~ questionnaires
-
-load("Study1/etaQs.Rda")
-
-# eta is called beta throughout these scripts for convenience of reusing code
-View(beta_PID5$fixed)
-
-main <- rbind(beta_STICSAcog$fixed[c(2), ],beta_STICSAsoma$fixed[c(2), ], beta_CAPE$fixed[c(2), ], 
-              beta_IUS$fixed[c(2), ], beta_RRQ$fixed[c(2), ], beta_PID5$fixed[c(2), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
-
-p5 <- errorBarPlot(df, title = expression("Main effects of questionnaires on" ~eta))
-
-p5
-
-# extract interaction with condition
-
-interact <- rbind(beta_STICSAcog$fixed[c(4), ],beta_STICSAsoma$fixed[c(4), ], beta_CAPE$fixed[c(4), ], beta_IUS$fixed[c(4), ], beta_RRQ$fixed[c(4), ], beta_PID5$fixed[c(4), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
-df$var = factor(df$var, levels = df$var, labels = df$var)
-
-p6 <- errorBarPlot(df, title  = expression("Interaction effects with condition on"~eta) )
-
-
-ggarrange(p5, p6, ncol = 2, widths = c(1, 0.75))
-
-
-########### st2 eta by intervention
-
-df1 <- read.csv("Study2/estimatesCB_n.csv")
-
-df1$tp <- ifelse(df1$tp == 0, "Pre", "Post")
-df1$cond <- ifelse(df1$cond == 0, "Control", "Intervention")
-
-df1$tp <- factor(df1$tp, levels = df1$tp, labels = df1$tp)
-df1$cond <- factor(df1$cond, levels = df1$cond, labels = df1$cond)
-
-dd <- ddply(df1, ~tp+cond,summarise, eta = meann(beta), se = se(beta)) 
-
-p3 <-  ggplot(dd, aes(tp, eta, color = cond, group = cond)) + geom_line(size = 1.5) +
-  geom_linerange(aes(ymin = eta -se, ymax = eta+se), size = 1.5) +
-  labs(title = "Intervention effect on the novelty bonus",
-       x = "Timepoint",
-       y = expression(eta~"parameter"))+
-  scale_color_manual(name = "Condition", values = c(control, red))+
-  theme(legend.position = c(0.17, 0.17),
-        axis.title.y = element_text(margin = margin("l" = 22, "r" = 5)),
-        legend.background = element_rect(fill = "transparent"))
-p3
-
-ggarrange(p5,p6, p3, ncol = 3, nrow = 1, labels = "AUTO", widths = c(1,0.9, 0.9), align = "h")
 
 
 
@@ -288,7 +93,7 @@ df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity",
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
-                                                                           "95HDI lower bound", "95HDI upper bound"))
+                                                                            "95HDI lower bound", "95HDI upper bound"))
 
 interact <- rbind(Sc$fixed[7, ],Ss$fixed[7, ], C$fixed[c(7), ], I$fixed[c(7), ], R$fixed[c(7), ], P$fixed[c(7), ])
 df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
@@ -349,7 +154,8 @@ stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Pre
 load("Study1/lsQs.Rda")
 
 main <- rbind(ls_STICSAcog$fixed[c(2), ],ls_STICSAsoma$fixed[c(2), ], ls_CAPE$fixed[c(2), ], ls_IUS$fixed[c(2), ], ls_RRQ$fixed[c(2), ], ls_PID5$fixed[c(2), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
@@ -359,14 +165,69 @@ stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Pre
 # extract interaction with condition
 
 interact <- rbind(ls_STICSAcog$fixed[c(4), ],ls_STICSAsoma$fixed[c(4), ], ls_CAPE$fixed[c(4), ], ls_IUS$fixed[c(4), ], ls_RRQ$fixed[c(4), ], ls_PID5$fixed[c(4), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+df$var = factor(df$var, levels = df$var, labels = df$var)
+
+stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
+                                                                            "95HDI lower bound", "95HDI upper bound"))
+
+############## replication of findings using distances instead of P(novel) #############
+
+load("Study1/distanceQs.Rda")
+
+main <- rbind(STICSAcog$fixed[rownames(STICSAcog$fixed) == "STICSAcog", ],
+              STICSAsoma$fixed[rownames(STICSAsoma$fixed) == "STICSAsoma", ], 
+              CAPE_depressed$fixed[rownames(CAPE_depressed$fixed) == "CAPE_depressed", ], 
+              IUS$fixed[rownames(IUS$fixed) == "IUS", ], 
+              RRQ$fixed[rownames(RRQ$fixed) == "RRQ", ], 
+              PID5_negativeAffect$fixed[rownames(PID5_negativeAffect$fixed) == "PID5_negativeAffect", ])
+
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p2 <- errorBarPlot(df, title = "Main effects of questionnaires on distance between clicks")
+p2
+
+# extract interaction with condition
+
+interact <- rbind(STICSAcog$fixed[rownames(STICSAcog$fixed) == "STICSAcog:krakenPres", ],
+                  STICSAsoma$fixed[rownames(STICSAsoma$fixed) == "STICSAsoma:krakenPres", ], 
+                  CAPE_depressed$fixed[rownames(CAPE_depressed$fixed) == "CAPE_depressed:krakenPres", ], 
+                  IUS$fixed[rownames(IUS$fixed) == "IUS:krakenPres", ], 
+                  RRQ$fixed[rownames(RRQ$fixed) == "RRQ:krakenPres", ], 
+                  PID5_negativeAffect$fixed[rownames(PID5_negativeAffect$fixed) == "PID5_negativeAffect:krakenPres", ])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+
+p3 <- errorBarPlot(df, title = "Interaction effects with condition")
+
+p3
+
+dist <- ggarrange(p2,p3, ncol = 2, nrow = 1)
+dist
+
+ggsave("plots/SIdistanceQs.png", dist, width = 17.5, height = 3)
+
+############### table of these stats 
+
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
                                                                             "95HDI lower bound", "95HDI upper bound"))
 
 
-################### SI plots ##############
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+df$var = factor(df$var, levels = df$var, labels = df$var)
+
+stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
+                                                                            "95HDI lower bound", "95HDI upper bound"))
+
+
+################### model comparison plots ##############
 
 ############ model comparison St 2
 
@@ -424,5 +285,151 @@ ggplot(exc, aes(y=exceedance_probability, x=model, fill=as.factor(kraken_present
   scale_x_discrete(labels = c("POS", "random", expression("CB_"~beta~"=0"), "full CB", "novelty bonus"))+
   scale_y_continuous(expand = c(0.01, 0))+
   facet_grid(cols = vars(kraken_present))
+
+############# parameter recovery plots ##########
+
+### scatter plot
+
+trueParameters <- read.csv("Study1/estimatesCB_n.csv")%>% 
+  pivot_longer(cols = 3:5, names_to = "Parameter", values_to = "generating")
+recoveredParameters <- read.csv("Study1/recoveredEstimates.csv")%>% 
+  pivot_longer(cols = 3:5, names_to = "Parameter", values_to = "recovered")
+
+parameters <- trueParameters %>% 
+  left_join(recoveredParameters, by = c("ID", "kraken_present", "Parameter")) %>% 
+  mutate(Condition = factor(kraken_present, levels = c(0,1), labels = c("safe", "risky")),
+         Parameter = recode(Parameter, "beta" = "eta", "ls" = "lambda"))
+
+p1 <- ggplot(parameters, aes(generating, recovered, color = Condition)) + 
+  geom_jitter(alpha = 0.3) +
+  facet_wrap(vars(Parameter), scales = "free") +
+  geom_abline(aes(intercept = 0, slope = 1))+
+  scale_color_manual(values = c(darkBlue, red))+
+  ggtitle("Parameter recovery in Study 1")
+
+p1
+
+ggsave("plots/SIParameterRecoveryScatterStudy1.png", plot = p1, width = 9, height = 3)
+
+
+####### confusion matrix plot
+
+parameters <- read.csv("Study1/estimatesCB_n.csv") %>% 
+  left_join(read.csv("Study1/recoveredEstimates.csv"), by = c("ID", "kraken_present"))
+
+compute_correlations <- function(data) {
+  data %>%
+    cor(use = "pairwise.complete.obs") %>%
+    as.data.frame() %>%
+    mutate(row = rownames(.)) %>%
+    subset(grepl("y", row), select = !grepl("y", colnames(.))) %>%
+    pivot_longer(cols = c(1:3), names_to = "generating", values_to = "cor") %>%
+    rename(recovered = row) %>%
+    mutate(generating = substr(generating, 1, nchar(generating) - 2),
+           recovered = substr(recovered, 1, nchar(recovered) - 2))
+}
+
+cors <- parameters %>%
+  split(.$kraken_present) %>%
+  map(~ .x %>% select(-ID, -kraken_present) %>% compute_correlations()) %>%
+  bind_rows(.id = "Condition") %>%
+  mutate(Condition = factor(Condition, levels = c(0,1), labels = c("safe", "risky")),
+         generating = recode(generating, "beta" = "eta", "ls" = "lambda"),
+         recovered = recode(recovered, "beta" = "eta", "ls" = "lambda"))
+
+
+
+p2 <- ggplot(cors, aes(generating, recovered, fill = cor)) + 
+  geom_raster()+
+  scale_fill_gradient2(low = red, mid = "white", high = darkBlue) +
+  geom_label(aes(label = round(cor, digits =2)), fill = "white")+ 
+  facet_wrap(vars(Condition)) +
+  ggtitle("Parameter identifiability in Study 1")
+  
+p2
+
+ggsave("plots/SIParameterRecoveryGridStudy1.png", plot = p2, width = 9, height = 3)
+
+
+
+##### same for study 2
+
+
+### scatter plot
+
+trueParameters <- read.csv("Study2/estimatesCB_n.csv")%>% 
+  pivot_longer(cols = 4:6, names_to = "Parameter", values_to = "generating")
+recoveredParameters <- read.csv("Study2/recoveredEstimates.csv")%>% 
+  subset(select = -X) %>% 
+  pivot_longer(cols = 4:6, names_to = "Parameter", values_to = "recovered")
+
+parameters <- trueParameters %>% 
+  left_join(recoveredParameters, by = c("ID", "cond","tp", "Parameter")) %>% 
+  mutate(Condition = factor(cond, levels = c(0,1), labels = c("control", "intervention")),
+         Timepoint = factor(tp, levels = c(0,1), labels = c("Pre", "Post")),
+         Parameter = recode(Parameter, "beta" = "eta", "ls" = "lambda"))
+
+
+pa <- ggplot(parameters[parameters$Timepoint == "Pre", ], aes(generating, recovered, color = Condition)) + 
+  geom_jitter() +
+  facet_wrap(vars(Parameter), scales = "free") +
+  geom_abline(aes(intercept = 0, slope = 1))+
+  scale_color_manual(values = c(control, red)) +
+  ggtitle("Baseline")
+
+pa
+
+pb <- ggplot(parameters[parameters$Timepoint == "Post", ], aes(generating, recovered, color = Condition)) + 
+  geom_jitter() +
+  facet_wrap(vars(Parameter), scales = "free") +
+  geom_abline(aes(intercept = 0, slope = 1))+
+  scale_color_manual(values = c(control, red))+
+  ggtitle("After intervention")
+
+pb
+
+p1 <- ggarrange(pa, pb, ncol = 1, nrow = 2,common.legend = T, legend = "bottom") + ggtitle("Parameter recovery in Study 2")
+
+p1
+
+ggsave("plots/SIParameterRecoveryScatterStudy2.png", plot = p1, width = 9, height = 6)
+
+
+####### confusion matrix plot
+
+parameters <- read.csv("Study2/estimatesCB_n.csv") %>% 
+  left_join(read.csv("Study2/recoveredEstimates.csv"), by = c("ID", "cond", "tp"))
+
+
+# Capture group identifiers
+group_info <- parameters %>%
+  group_by(cond, tp) %>%
+  group_keys()
+
+# Split the dataframe by groups and compute correlations
+cors <- parameters %>%
+  group_by(cond, tp) %>%
+  group_split() %>%
+  map(~ .x %>% select(-ID, -cond, -tp) %>% compute_correlations()) %>%
+  bind_rows(.id = "CondTp") %>%
+  mutate(Condition = factor(rep(group_info$cond, each = 3*3), levels = c(0,1), labels = c("control", "intervention")),
+         Timepoint = factor(rep(group_info$tp, each = 3*3), levels = c(0,1), labels = c("baseline", "post")),
+         generating = recode(generating, "beta" = "eta", "ls" = "lambda"),
+         recovered = recode(recovered, "beta" = "eta", "ls" = "lambda"))
+
+
+
+p2 <- ggplot(cors, aes(generating, recovered, fill = cor)) + 
+  geom_raster()+
+  scale_fill_gradient2(low = red, mid = "white", high = darkBlue) +
+  geom_label(aes(label = round(cor, digits =2)), fill = "white")+ 
+  facet_grid(cols = vars(Condition), rows = vars(Timepoint)) +
+  ggtitle("Parameter identifiability in Study 2")
+
+p2
+
+ggsave("plots/SIParameterRecoveryGridStudy2.png", plot = p2, width = 9, height = 6)
+
+
 
 
