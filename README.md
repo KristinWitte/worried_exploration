@@ -5,6 +5,17 @@
 
 Files that are not in any folder are relevant for both studies.
 
+## Variable naming
+
+blocknr/block: block or round index
+click/trial: trial index within that block
+krakenPresent/krakenPres: condition (safe = 0 vs risky = 1)
+krakenCaught: whether or not participants clicked a square below the threshold to loose all rewards
+x: x-coordinate of selected square
+y: y-coordinate of selected square
+z: reward obtained
+env: index of the reward grid participants saw on that round
+
 ### Plots
 contains all plots used in the paper.
 

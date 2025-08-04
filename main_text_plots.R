@@ -1,5 +1,5 @@
 ######################### final plots for the combined project (main text) ######################
-
+rm(list = ls())
 library(ggplot2)
 theme_set(theme_classic(base_size = 15))
 library(ggpubr)
@@ -12,12 +12,16 @@ library(here)
 
 
 ############## get data ##################
-load("Study1/master.Rda")
+load("Study1/data/master.Rda")
 Master1 <- Master
 Master1$krakenPres<- factor(Master1$krakenPres, levels = c(0,1), labels = c("safe", "risky"))
 
-load("Study2/Master.Rda")
-load("Study2/nervous.Rda")
+load("replication_study/data/Master_strict.Rda")
+Master3 <- Master
+Master3$krakenPresent<- factor(Master3$krakenPresent, levels = c(0,1), labels = c("safe", "risky"))
+
+load("Study2/data/Master.Rda")
+load("Study2/data/nervous.Rda")
 
 Master$row <- 1:nrow(Master)
 nervous$round <- rep(c(2, 4, 6, 7, 9, 11), nrow(nervous)/6)
@@ -34,6 +38,10 @@ Master$unique[is.na(Master$z)] <- NA
 Master1$unique<-ave(paste(Master1$x, Master1$y), paste(Master1$ID, 'x', Master1$blocknr), FUN=duplicated)
 Master1$unique<-ifelse(Master1$unique==TRUE, 0, 1)
 Master1$unique[is.na(Master1$z)] <- NA
+
+Master3$unique<-ave(paste(Master3$x, Master3$y), paste(Master3$ID, 'x', Master3$block), FUN=duplicated)
+Master3$unique<-ifelse(Master3$unique==TRUE, 0, 1)
+Master3$unique[is.na(Master3$z)] <- NA
 
 ## set colours
 red <- brewer.pal(12,"Paired")[6]
@@ -70,7 +78,8 @@ errorBarPlot <- function(df, title = waiver(), xlabel = expression(beta~"-Coeffi
   
 }
 
-
+se<-function(x){sd(x, na.rm = T)/sqrt(length(na.omit(x)))}
+meann <- function(x){mean(x, na.rm = T)}
 
 
 
@@ -83,13 +92,13 @@ errorBarPlot <- function(df, title = waiver(), xlabel = expression(beta~"-Coeffi
 
 
 meanmean <- ddply(Master1[Master1$blocknr != 6, ], .(click, krakenPres), summarize, se = se(na.omit(z)), z = mean(z, na.rm = TRUE))
-
+meanmean$click <- meanmean$click -1
 
 p1 <- ggplot(data = meanmean, aes(x = click, y = z, color = krakenPres)) +
   geom_point()+
   geom_line(size = 1) +
   geom_linerange(aes(ymin = z - se, ymax = z+se)) +
-  scale_x_continuous(breaks = round(seq(1,11, by = 1),1)) +
+  scale_x_continuous(breaks = round(seq(0,10, by = 1),1)) +
   labs(title = "Mean rewards over clicks study 1",
        y = "Rewards ± SE",
        x = "Click") +
@@ -97,14 +106,14 @@ p1 <- ggplot(data = meanmean, aes(x = click, y = z, color = krakenPres)) +
   theme(legend.position = c(0.9,0.2))
 p1
 
-meanmean <- ddply(Master[Master$block != 6, ], .(trial, cond), summarize, se = se(na.omit(z)), z = mean(z, na.rm = TRUE))
-
+meanmean <- ddply(Master, .(trial, cond), summarize, se = se(na.omit(z)), z = mean(z, na.rm = TRUE))
+meanmean$trial <- meanmean$trial -1
 
 p2 <- ggplot(data = meanmean, aes(x = trial, y = z, color = cond)) +
   geom_point()+
   geom_line(size = 1) +
   geom_linerange(aes(ymin = z - se, ymax = z+se)) +
-  scale_x_continuous(breaks = round(seq(1,26, by = 1),1)) +
+  scale_x_continuous(breaks = round(seq(0,25, by = 1),1)) +
   labs(title = "Mean rewards over clicks study 2",
        y = "Rewards ± SE",
        x = "Click") +
@@ -113,18 +122,38 @@ p2 <- ggplot(data = meanmean, aes(x = trial, y = z, color = cond)) +
 p2
 
 
-ggarrange(p1, p2, ncol = 2, nrow = 1, labels = c("C", "D"), widths = c(0.5, 1))
+meanmean <- ddply(Master3, .(trial, krakenPresent), summarize, se = se(na.omit(z)), z = mean(z, na.rm = TRUE))
 
-############# Figure 2: Study 1 NUO, NUO ~Q , Study 2 Nerv, NUO over blocks, NUO ~nerv ##############
 
-################ A: St1 NUO
+p3 <- ggplot(data = meanmean, aes(x = trial, y = z, color = krakenPresent)) +
+  geom_point()+
+  geom_line(size = 1) +
+  geom_linerange(aes(ymin = z - se, ymax = z+se)) +
+  scale_x_continuous(breaks = round(seq(0,10, by = 1),1)) +
+  labs(title = "Mean rewards over clicks replication",
+       y = "Rewards ± SE",
+       x = "Click") +
+  scale_color_manual(values = c(darkBlue, red), name = "Condition") +
+  theme(legend.position = c(0.9,0.2))
+p3
+
+
+fig1 <- ggarrange(p1, p2, p3, ncol = 3, nrow = 1, labels = c("C", "D", "E"), widths = c(0.5, 1, 0.5))
+fig1
+
+ggsave(plot = fig1, filename = "plots/Fig1CDE.png", width = 19, height = 4)
+
+############# Figure 2: Model agnostic results ##############
+
+################ A: Study 1 P(novel)
 
 d2<-ddply(Master1[Master1$blocknr != 6, ], ~krakenPres+ID, summarize, mu=mean(unique, na.rm=TRUE), se=se(na.omit(unique)))
+n_lines <- nrow(d2)/2
 p1 <- ggplot(d2, aes(y=mu, x=krakenPres)) +
   geom_half_violin(side = c("l", "r"), aes(fill = krakenPres))+
   geom_boxplot(width = 0.05) +
-  geom_line(aes(x = c(rep(c(1.2, 1.8), each = (nrow(d2)/2))), group = ID), alpha = 0.2) + 
-  geom_jitter(aes(x = c(rep(c(1.1, 1.9), each = (nrow(d2)/2))), color = krakenPres), alpha = 0.2, width = 0.05)+
+  geom_line(aes(x = rep(c(1.2, 1.8), each = n_lines), group = ID), alpha = 0.2) + 
+  geom_jitter(aes(x = rep(c(1.1, 1.9), each = n_lines), color = krakenPres), alpha = 0.2, width = 0.05)+
   scale_fill_manual(name = "Condition", values = c(darkBlue, red))+
   scale_color_manual(name = "Condition", values = c(darkBlue, red))+
   #title
@@ -134,32 +163,46 @@ p1 <- ggplot(d2, aes(y=mu, x=krakenPres)) +
   theme(legend.position = "none")+
   #scale_x_discrete(labels = c("safe", "risky"))+
   #adjust text size
-  scale_y_continuous(expand = c(0, 0))
+  scale_y_continuous(expand = c(0, 0)) 
 
 p1
 
+################# B: Study 3: nervousness in conditions
 
-######### B+C: St1 NUO ~Q
+d2<-ddply(Master3, ~krakenPresent+ID, summarize, mu=mean(as.numeric(nervous), na.rm=TRUE), se=se(na.omit(nervous)))
+p2 <- ggplot(d2, aes(y=mu, x=krakenPresent)) +
+  geom_half_violin(side = c("l", "r"), aes(fill = krakenPresent))+
+  geom_boxplot(width = 0.05) +
+  geom_line(aes(x = c(rep(c(1.2, 1.8), each = (nrow(d2)/2))), group = ID), alpha = 0.2) + 
+  geom_jitter(aes(x = c(rep(c(1.1, 1.9), each = (nrow(d2)/2))), color = krakenPresent), alpha = 0.2, width = 0.05)+
+  scale_fill_manual(name = "Condition", values = c(darkBlue, red))+
+  scale_color_manual(name = "Condition", values = c(darkBlue, red))+
+  #title
+  labs(title = "Nervousness", 
+       x = "Condition", 
+       y = "Nervousness")+
+  theme(legend.position = "none")+
+  #scale_x_discrete(labels = c("safe", "risky"))+
+  #adjust text size
+  scale_y_continuous(expand = c(0, 0)) 
 
-load("Study1/NUOQs.Rda")
-
-main <- rbind(Sc$fixed[c(3), ],Ss$fixed[c(3), ], C$fixed[c(3), ], I$fixed[c(3), ], R$fixed[c(3), ], P$fixed[c(3), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
-
-p2 <- errorBarPlot(df, title = "Main effects of questionnaires on P(novel)")
 p2
 
-# extract interaction with condition
+########### C: Study 3:  P(novel) by nervousness
 
-interact <- rbind(Sc$fixed[7, ],Ss$fixed[7, ], C$fixed[c(7), ], I$fixed[c(7), ], R$fixed[c(7), ], P$fixed[c(7), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
-                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+load("replication_study/analysis/nerv_pnovel_strict.Rda")
+view(nerv_pnovel$fixed)
+selected_rows <- c("nervous:prev_z", "krakenPresent:nervous", "prev_z", "krakenPresent", "nervous")
+main <- nerv_pnovel$fixed[selected_rows, ]
+df <- data.frame(var = c("nervousness* prev. reward","nervousness * condition","prev. reward", "condition", "nervousness"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 
-p3 <- errorBarPlot(df, title = "Interaction effects with condition on P(novel)")
+p3 <- errorBarPlot(df, title = "Predicting P(novel) in replication")
 
 p3
 
-######## D: St2 nervous
+
+########## D: Study 2 nervousness over rounds of the task
 nervous$round <- rep(c(2, 4, 6, 7, 9, 11), nrow(nervous)/6)
 df <- ddply(nervous, ~cond+round, summarise, se = se(nervous), nervousness = meann(nervous))
 df$block <- rep(c(-5, -3, -1, 1, 3, 5),2)
@@ -178,21 +221,8 @@ Nerv <- ggplot(df, aes(block, nervousness, color = cond)) + geom_line(size = 1.5
         legend.background = element_rect(fill = "transparent"))
 
 Nerv
+############## E: St2 P(novel) over rounds of the task
 
-## E: exploration ~ nervous
-load("Study2/nervousByInterv.Rda")
-
-nerv <- summary(model)
-
-main <- nerv$fixed[c(2,7:10), ]
-df <- data.frame(var = c("nervousness", "nervousness*condition", "nervousness*time point", "intervention", "nervousness*intervention"), 
-                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
-
-p4 <- errorBarPlot(df, title = "Effects of nervousness on P(novel)")
-
-p4
-
-### F: St2 NUO
 df <- ddply(Master, ~cond+block, summarise, se = se(unique), Punique = mean(na.omit(unique)))
 df$block <- rep(c(seq(-5,-1), seq(1,5)),2)
 
@@ -211,43 +241,72 @@ NUO <- ggplot(df, aes(block, Punique, color = cond)) + geom_line(size = 1.5) +
 
 NUO
 
+############### F: Study 2 exploration ~ nervousness
+load("Study2/analysis/nervousByInterv.Rda")
 
-ggarrange(p1,p2,p3,Nerv,p4,NUO, nrow = 2, ncol = 3, widths = c(0.6, 0.9, 0.8, 0.6, 0.9, 0.8), labels = "AUTO")
+nerv <- summary(model)
+nerv$fixed
+selected_rows <- c("nervous:cond:tp", "cond:tp", "nervous:tp", "nervous:prev_z",
+                   "nervous:cond", "prev_z", "cond", "nervous")
+main <- nerv$fixed[selected_rows, ]
+df <- data.frame(var = c("nervousness*intervention","intervention", "nervousness*time point",
+                         "nervousness * prev.reward", "nervousness*condition","prev. reward","condition","nervousness"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 
+p4 <- errorBarPlot(df, title = "Effects of nervousness on P(novel)")
 
-##################### Figure 3: St1 eta ~Q, St2 eta ################# 
-
-
-############### A+B: St1 eta ~ questionnaires
-
-load("Study1/etaQs.Rda")
-
-# eta is called beta throughout these scripts for convenience of reusing code
-View(beta_PID5$fixed)
-
-main <- rbind(beta_STICSAcog$fixed[c(2), ],beta_STICSAsoma$fixed[c(2), ], beta_CAPE$fixed[c(2), ], 
-              beta_IUS$fixed[c(2), ], beta_RRQ$fixed[c(2), ], beta_PID5$fixed[c(2), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
-
-p5 <- errorBarPlot(df, title = expression("Main effects of questionnaires on" ~eta))
-
-p5
-
-# extract interaction with condition
-
-interact <- rbind(beta_STICSAcog$fixed[c(4), ],beta_STICSAsoma$fixed[c(4), ], beta_CAPE$fixed[c(4), ], beta_IUS$fixed[c(4), ], beta_RRQ$fixed[c(4), ], beta_PID5$fixed[c(4), ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
-df$var = factor(df$var, levels = df$var, labels = df$var)
-
-p6 <- errorBarPlot(df, title  = expression("Interaction effects with condition on"~eta) )
+p4
 
 
-ggarrange(p5, p6, ncol = 2, widths = c(1, 0.75))
+# first put together plots that will be underneath each other to align them bc otherwise the alignment is super difficult
+left <- ggarrange(p1, Nerv, nrow = 2, heights = c(0.8, 1), labels = c("A", "D"), align = "hv")
+left
+
+middle <- ggarrange(p2, NUO, nrow = 2, heights = c(0.8, 1), labels = c("B", "E"),align = "hv")
+middle
+
+right <- ggarrange(p3, p4, nrow = 2, heights = c(0.8,1),labels = c("C", "F"), align = "hv")
+right
+
+fig2 <- ggarrange(left, middle, right, ncol = 3,widths = c(0.5, 0.5, 0.8), align = "hv")
+fig2
+
+ggsave("plots/Fig2.png", plot = fig2, width = 19, height = 6)
 
 
-########### C: st2 eta by intervention
+##################### Figure 3: Modelling results ################# 
 
-df1 <- read.csv("Study2/estimatesCB_n.csv")
+################ A Study 3: eta ~ nervous
+
+load("replication_study/analysis/estims_nervous.Rda")
+
+eta$fixed
+selected_rows <- c("krakenPresent:nervous", "krakenPresent", "nervous")
+main <- eta$fixed[selected_rows, ]
+main
+df <- data.frame(var = c("nervousness*condition","condition","nervousness"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p1 <- errorBarPlot(df, title = expression("Effects of nervousness on"~eta))
+
+p1
+
+############# B Study 3: ls ~  nervous
+ls$fixed
+main <- ls$fixed[selected_rows, ]
+main
+df <- data.frame(var = c("nervousness*condition","condition","nervousness"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p2 <- errorBarPlot(df, title = expression("Effects of nervousness on"~lambda))
+
+p2
+
+
+
+############## C: Study 2:  eta by intervention
+
+df1 <- read.csv("Study2/data/estimatesCB_n.csv")
 
 df1$tp <- ifelse(df1$tp == 0, "Pre", "Post")
 df1$cond <- ifelse(df1$cond == 0, "Control", "Intervention")
@@ -259,7 +318,7 @@ dd <- ddply(df1, ~tp+cond,summarise, eta = meann(beta), se = se(beta))
 
 p3 <-  ggplot(dd, aes(tp, eta, color = cond, group = cond)) + geom_line(size = 1.5) +
   geom_linerange(aes(ymin = eta -se, ymax = eta+se), size = 1.5) +
-  labs(title = "Intervention effect on the novelty bonus",
+  labs(title = expression("Intervention effect on"~eta),
        x = "Timepoint",
        y = expression(eta~"parameter"))+
   scale_color_manual(name = "Condition", values = c(control, red))+
@@ -268,6 +327,8 @@ p3 <-  ggplot(dd, aes(tp, eta, color = cond, group = cond)) + geom_line(size = 1
         legend.background = element_rect(fill = "transparent"))
 p3
 
-ggarrange(p5,p6, p3, ncol = 3, nrow = 1, labels = "AUTO", widths = c(1,0.9, 0.9), align = "h")
+fig3 <-  ggarrange(p3,p1,p2, ncol = 3, nrow = 1, labels = "AUTO", widths = c(0.8,1,1), align = "h")
+fig3
 
+ggsave("plots/Fig3Novelty.png", plot = fig3, width = 19, height = 3.5)
 

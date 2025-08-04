@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="jatos.js"></script>
+    <link rel="stylesheet" type="text/css" href="questionnaires.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Questionnaires</title>
+    
+</head>
+<body>
+    <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-firestore.js"></script>
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+        apiKey: "AIzaSyC57RD8AugAR5JCG66O-AZFHRSAnRGD4Ow",
+        authDomain: "safe-exploration.firebaseapp.com",
+        projectId: "safe-exploration",
+        storageBucket: "safe-exploration.appspot.com",
+        messagingSenderId: "67274241604",
+        appId: "1:67274241604:web:6efa85b6e4c9df0adf2e11"
+        };
+
+    //     // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    //   </script>
+</body>
+<div class="div" id="mainSection">
+    <header class="form__header" id="header"><h2 id="header_title" class="form__title"></h2></header>
+    <section class="mainInstructions" id="consent"></section>
+</div>
+
+<div class="form" id = "questionnaire">
+    <!-- <div id="subjectID" class="subjectID">
+    </div> -->
+    <header class="form__header">
+        <h2 class="form__title" id="header">Some questions about you</h2>
+        <p class="form__instruction">These questions ask you about things like personality traits and emotions</p>
+    </header>
+    <div id="questionnaires">
+    </div>
+    
+ 
+    <!-- <button type = "button" class = "submit_button" id = "continue">continue to game</button> -->
+
+
+</div>
+
+
+<script>
+
+
+function getQueryVariable(variable)
+{
+    var query = window.location.search.substring(1);
+    var vars = query.split("&");
+    for (var i=0;i<vars.length;i++) {
+        var pair = vars[i].split("=");
+        if(pair[0] == variable){return pair[1];}
+    }
+    return(false);
+}
+
+$(document.getElementById("questionnaire")).hide()
+var demo = true // data is printed to console and firebase stuff does not happen
+var nextPage
+var subjectID
+var studyID
+var start
+var end
+var totalTime
+
+var uid;
+var db; // this will be the database reference
+var docRef // this is the reference to the specific document within the database that we're saving to
+
+
+//nextPage = "game.html?" + "PROLIFIC_PID=" + subjectID + '&UID=' + uid + '&STUDY=' + studyID;
+
+
+if (!demo){
+    initFirebase = function() {
+
+// Register with firebase
+firebase.auth().signInAnonymously().then(function() {
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            var isAnonymous = user.isAnonymous;
+            uid = user.uid;
+            startQuestionnaires(uid);
+        } 
+    });
+}).catch(function(error) {
+    var errorCode = error.code;
+    var errorMessage = error.message;
+    console.error(errorCode);
+    console.error(errorMessage);
+
+    document.body.innerHTML = '<div>' + 
+    "<h1>Oops</h1>Looks like there's a problem! Try hard refreshing your browser (Ctrl + F5). If that doesn't work, contact us on Prolific.<br><br>Thank you!</div>"
+});
+
+
+}
+db = firebase.firestore();
+}
+
+
+
+
+
+var check_consent = function (elem) {
+
+  if ($('#consent_checkbox1').is(':checked') && $('#consent_checkbox2').is(':checked') &&
+    $('#consent_checkbox3').is(':checked') && $('#consent_checkbox4').is(':checked')) 
+    // if (1 == 1) 
+    { // KW: if you checked everything --> remove consent form and go back to top of page
+
+        //Clear the page 
+        document.getElementById('consent').innerHTML = '';
+        document.getElementById('consent').style.margin = 0;
+        document.getElementById('consent').style.padding = 0;
+        document.getElementById('header_title').innerHTML = '';
+        document.getElementById('header_title').style.margin = 0;
+        document.getElementById('header_title').style.padding = 0;
+        var mainSection = document.getElementById('mainSection'); // KW: contains 'header_title', 'consent', 'header'
+        var header = document.getElementById('header');
+        mainSection.removeChild(header); // KW: irretrievably (?) removes header node which is a child of 'mainSection'
+        window.scrollTo(0, 0); // KW: go to top of page
+
+        // Do firebase setup and then create questionnaires
+        if (demo){
+            startQuestionnaires("test");
+        }
+        else {
+            initFirebase();
+        }
+        // docRef.update({
+        //     questionnairesPre: values
+        // }).then(
+        //     function() {
+        //         // If saving worked, move to the next page
+        //         window.location.href = nextPage;
+        //     }
+
+        // )
+
+
+    }
+
+  else {
+    alert("Unfortunately you will not be able to participate in this research study if you do " +
+      "not consent to the above. Thank you for your time.");
+    return false;
+  }
+};
+
+
+document.getElementById('header_title').innerHTML = "Welcome";
+document.getElementById('consent').innerHTML =  
+    "Study Title: Links Between Exploration Behaviour and Mental Health Symptoms<br><br>"+
+
+    "I would like to invite you to participate in this research project which forms part of my research. Before you decide whether you want to take part, it is important for you to understand why the research is being done and what your participation will involve. Please take time to read the following information carefully and discuss it with others if you wish. Ask me if there is anything that is not clear or if you would like more information.\n"+
+    "<h2>What is the purpose of the study?</h2>" +
+    "<p>We wish to understand how people learn from positive and negative feedback, and how this influences how they make decisions. We also want to understand how the way in which we learn from this feedback is related to symptoms of common mental health problems such as anxiety and depression.</p>"+
+
+    "<h2>Why have I been invited to take part?</h2>" +
+    "<p>You are being invited to participate in this study because you are over 18 and live in the UK.</p>"+
+
+    "<h2>What will happen if I take part?</h2>" +
+    "<p>You will play a simple game that involves learning to make decisions that will maximize the number of points you gain. You will also complete some questionnaires that ask about symptoms of common mental health problems and related personality traits. These will include questions about:</p>" +
+    "<ul style='text-align: left'> " +
+    "<li>your mood and energy levels</li>" +
+    "<li>your level of anxiety</li>" +
+    "<li>things that worry or concern you</li>" +
+    "<li>your tendency to ruminate or think negative thoughts</li>" +
+    "<li>your ability to concentrate</li>" +
+    "<li>the ways in which you interact with other people</li>" +
+    "</ul>" +
+    "<p>These questionnaires are not designed to diagnose mental health problems, and so will not tell you whether you have a particular diagnosis.</p>" +
+    "<p>The study will take no more than 1½ hours in total, with up to 45 minutes spent on the task and 45 minutes spent on the questionnaires, and you will be given opportunities to take breaks during the study.</p>" +
+    "<p>We will also invite some randomly-selected people who participate in this study to complete up to four further follow-up studies, where you will complete some of the same tasks and questionnaires. If invited to take part in these follow-up studies, it is up to you whether or not you take part, and your compensation for the current study will not be affected.</p>"+
+
+    "<h2>Do I have to take part?</h2>" +
+    "<p>Participation is completely voluntary. You should only take part if you want to and choosing not to take part will not disadvantage you in any way. If you choose to take part you will be asked to provide your consent. To do this you will be asked to indicate that you have read and understand the information provided and that you consent to your anonymous data being used for the purposes explained.</p>" +
+    "<p>You are free to withdraw at any point during completion of the survey, without having to give a reason. If you wish for the responses you have provided to be deleted, you will be able to request this by sending the researcher a message through Prolific within 6 months of completing the study. Data linked with your Prolific ID will then be removed. Withdrawing from the study will not affect you in any way. Please do not include any personal identifiable information in your responses.</p>"+
+
+    "<h2>Incentives</h2>" +
+    "<p>You will be compensated for the time you take to complete this study at a minimum rate of £8 per hour.</p>" +
+    "<p>You will also be able to receive a bonus payment, depending on how many points you accumulate in the task. This bonus payment will be up to 40% of the base payment for the study, and will never be less than £0.</p>"+
+
+    "<h2>What are the possible risks of taking part?</h2>" +
+    "<p>This study involves low risk, meaning there will be no more risk than in daily life. You may be asked about sensitive topics, such as your feelings of anxiety. The following information and support services are available should any of these questions cause concerns about your mental health:</p>" +
+    "<ul style='text-align: left'>" +
+    "<li><a href='https://www.nhs.uk/mental-health/'>NHS mental health information</a></li>" +
+    "<li><a href='https://www.mind.org.uk/information-support/'>Mind (a mental health charity)</a></li>" +
+    "<li><a href='https://giveusashout.org/'>SHOUT (a free mental health support service)</a></li>" +
+    "</ul>" +
+    "<p>All of this information will be stored anonymously, and you will not be able to be identified based on the information you provide.</p>"+
+
+    "<h2>Data Handling and Confidentiality</h2>" +
+    "<p>This research is anonymous. This means that nobody, including the researchers, will be aware of your identity, and that nobody will be able to connect you to the answers you provide, even indirectly. Your anonymous data will be stored initially in cloud storage services provided by Google, but we may share anonymised data in public research databases, to enable its use by other researchers in the future. This data will always be anonymous and it will not be possible for anyone to link the data to you.</p>"+
+
+    "<h2>How is the project being funded?</h2>" +
+    "<p>This study is being funded by a grant from the Wellcome Trust to Dr. Toby Wise.</p>"+
+
+    "<h2>What will happen to the results of the study?</h2>" +
+    "<p>The results of the study will be summarised in publications, which will be published in peer-reviewed scientific journals. The data collected as part of this study may also be shared with other researchers through public research databases.</p>"+
+
+    "<h2>Who should I contact for further information?</h2>" +
+    "<p>If you have any questions or require more information about this study, please contact me using the following contact details:</p>" +
+    "<p>Email: <a href='mailto:toby.wise@kcl.ac.uk'>toby.wise@kcl.ac.uk</a><br>" +
+    "Phone: 020 3228 2121</p>"+
+
+    "<h2>What if I have further questions, or if something goes wrong?</h2>" +
+    "<p>If this study has harmed you in any way or if you wish to make a complaint about the conduct of the study, you can contact King's College London using the details below for further advice and information:</p>" +
+    "<p>The Chair of the KCL PNM Research Ethics Panel: <a href='mailto:rec@kcl.ac.uk'>rec@kcl.ac.uk</a></p>"+
+
+    "<p>Thank you for reading this information sheet and for considering taking part in this research.</p>"+
+        "\n" +
+        "<p>If you are happy to proceed, please read the statement below and click the boxes to show that you consent to this study proceeding:</p>" +
+        "<ul style='list-style-type: none; text-align: left'>" +  // Remove bullet style and adjust padding
+    "<li><label><input type='checkbox' id='consent_checkbox1'> I have read the information provided, and understand what the study involves.</label></li>" +
+    "<li><label><input type='checkbox' id='consent_checkbox2'> I understand that my anonymised personal data can be shared with others for future research, shared in public databases and in scientific reports.</label></li>" +
+    "<li><label><input type='checkbox' id='consent_checkbox3'> I understand that I am free to withdraw from this study at any time without giving a reason and this will not affect the compensation I receive for taking part.</label></li>" +
+    "<li><label><input type='checkbox' id='consent_checkbox4'> I agree to take part in this study.</label></li>" +
+    "</ul>"+
+        "\n" +
+        "        <br><br>\n" +
+        "        <button type='button' id='start' class='submit_button'>Start study</button>\n" +
+        "        <br><br>";
+
+    document.getElementById("start").onclick = check_consent;
+
+// Don't let people complete the task on mobile devices
+if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    alert("Sorry, this task does not work on mobile devices");
+    document.getElementById('consent').innerHTML = "";
+}
+
+
+var questionnaire_data
+var submitted = false
+var attention
+
+
+// function saveData(filedata){
+//     var filename = "./data/" + subjectID + "data_1" +"_attention" + attention + ".txt";
+//     $.post("results_data.php", {postresult: filedata + "\n", postfile: filename })
+
+// }
+
+function createQuestion(questionnaireName, questionData) {
+    // This function creates an individual item
+
+    var f = document.createElement("form");
+    f.setAttribute('method',"post");
+    f.setAttribute('action',"submit.php");
+    f.setAttribute('id', questionnaireName.concat('_' + questionData.qNumber.toString()));
+    f.setAttribute("name", "form_");
+
+    var fieldset = document.createElement("fieldset");
+    fieldset.setAttribute("class", "form__options");
+    fieldset.setAttribute('id', questionnaireName.concat('_' + questionData.qNumber.toString()));
+    fieldset.setAttribute("name", "fs_");
+
+    var legend = document.createElement("legend");
+    legend.setAttribute("class", "form__question");
+    legend.setAttribute("name", "legend");
+    legend.append(questionData.prompt);
+
+    fieldset.appendChild(legend);
+
+    var labels = [];
+
+    for (i = 0; i < questionData.labels.length; i++) {
+
+        var p = document.createElement("p");
+        p.setAttribute('class', 'form__answer');
+        var c = document.createElement("input");
+        c.type = "radio";
+        c.id = questionnaireName.concat(questionData.qNumber.toString()).concat("answer".concat(i.toString()));
+        c.name = "question";
+        c.value = i;
+
+        var l = document.createElement("label");
+        l.setAttribute('for', c.id);
+        l.setAttribute("style", "margin:-10px; padding: 18px 10px 50px 10px")
+        l.append(questionData.labels[i]);
+
+        p.appendChild(c);
+        p.appendChild(l);
+
+        labels.push(p);
+
+        fieldset.appendChild(p)
+
+    }
+
+    f.appendChild(fieldset);
+
+
+    return f;
+
+}
+
+
+function createPreamble(preamble) {
+    // This is used to generate an introduction to the the questionnaire
+    var h = document.createElement("header");
+    h.setAttribute("class", "form__header");
+    h.setAttribute("name", "fs_");
+
+    var p = document.createElement("p");
+    p.setAttribute("class", "preamble");
+
+    var div = document.createElement("div");
+    div.innerHTML = preamble;
+
+    p.appendChild(div);
+    h.appendChild(p);
+
+    return h
+
+}
+
+
+function createQuestionnaire(questionnaire_data) {
+    // This function creates an entire questionnaire
+
+    // Start with the introduction
+    var preamble = createPreamble(questionnaire_data.preamble);
+    document.getElementById('questionnaires').appendChild(preamble);
+
+    // Loop through the items and add them
+    for (j = 0; j < questionnaire_data.questions.length; j++) {
+
+        questionnaire_data.questions[j].qNumber = j;
+
+        if (j < questionnaire_data.questions.length - 1) {
+            next = questionnaire_data.name.concat((j+1).toString());
+        }
+
+        document.getElementById('questionnaires').appendChild(createQuestion(questionnaire_data.name,
+            questionnaire_data.questions[j], next));
+
+    }
+
+}
+
+function getValues() {
+    // This function gets the recorded values for every item
+    // As it goes through, it highlights any items that weren't answered in red
+    // And then scrolls to them on completion
+
+    // All items have an ID starting with fs_
+    submitted = true
+    var inputs = document.getElementsByName("fs_");
+
+    // Loop through the items nad get their values
+    values = {};
+    incomplete = [];
+
+    for (i = 0; i < inputs.length; i++) {
+
+        if (inputs[i].id.length > 0) {
+            
+            // Get responses to questionnaire items
+            id = inputs[i].id;
+            legend = inputs[i].querySelectorAll('[name="legend"]')[0];
+
+            checked = inputs[i].querySelector('input[name="question"]:checked');
+
+            if (checked != null) {
+                legend.style.color = "#000000";
+                value = checked.value;
+                values[id] = value;
+                
+            }
+
+            // Get responses to text items
+            else if (inputs[i].querySelector('input[type="text"]')) {
+
+                value = inputs[i].querySelector('input[type="text"]').value;
+                if (value.length == 0) {
+
+                    legend.style.color = "#ff0000";
+                    incomplete.push(id);
+                }
+
+                else {
+                    legend.style.color = "#000000";
+                    values[id] = value;
+                }
+            }
+
+            // Get responses to slider items
+            else if (inputs[i].querySelector('input[type="range"]')) {
+                value = inputs[i].querySelector('input[type="range"]').value;
+                values[id] = value;
+
+            }
+
+            else {
+                legend.style.color = "#ff0000";
+                incomplete.push(id);
+            }
+
+            values[id] = values[id];
+        }
+
+    }
+
+    // This checks for any items that were missed and scrolls to them
+    if (incomplete.length > 0) {
+
+        $('html, body').animate({ // go to first missed items
+                scrollTop: $(document.getElementById(incomplete[0])).offset().top - 100
+                }, 400);
+       
+
+        if(incomplete.length > 1){ // if you missed more than one item
+           
+            for (i = 0; i < incomplete.length -1; i++){ // loops through all missed questions and attaches an event listener to each of them
+            
+            $(document.getElementById(incomplete[i])).children().click(function (e) { 
+                var target = e.target.parentElement.parentElement.parentElement.id // name of the given question
+                var n = incomplete.indexOf(target)// I can't simply use i as the index as it is already done with the loop by the time one clicks
+                var nextMiss = document.getElementById(incomplete[n+1])
+                $('html, body').animate({ // go to next question
+                scrollTop: $(nextMiss).offset().top - 100
+                }, 400);
+            });
+
+            }
+        }
+
+        
+
+        
+      }
+         
+    
+
+    // If everything is complete, save the data
+    else {
+
+        end = Number(new Date());
+        totalTime = (end - start)/60000; // time it took in minutes instead of milliseconds
+        values["rt"] = totalTime;
+
+        // do attention check
+
+        attention = 0
+        if (values["STICSA_T_9"] == "3") {
+            attention += 1
+
+        }
+        if (values["CAPE_4"] == "0"){
+            attention += 1
+        }
+
+        values["attention1"] = attention;
+
+        if (demo){
+            console.log(values)
+            //jatos.setStudySessionData({"ID": subjectID})
+            jatos.startComponent(2);
+            //window.location.href = nextPage;
+
+        } else {
+            docRef.update({
+            questionnairesPre: values
+        }).then(
+            function() {
+                
+                // If saving worked, move to the next page
+                //jatos.setStudySessionData({"ID": subjectID})
+                // jatos.setStudySessionData({"ID": subjectID,
+                //          "uid" : uid
+                // })
+                jatos.startComponent(2);
+            }
+
+        ).catch(function(error) {
+            // If writing failed, move on but also throw an error
+            console.error("Error writing document: ", error);
+            //jatos.setStudySessionData({"ID": subjectID})
+            // jatos.setStudySessionData({"ID": subjectID,
+            //              "uid" : uid
+            // })
+            jatos.startNextComponent();
+            })
+
+
+        }
+
+        
+    }
+
+
+}
+
+
+var startQuestionnaires = function(uid) {
+
+// Firebase setup
+
+// GET URL VARIABLES
+// Get Prolific ID from URL
+
+subjectID = jatos.urlQueryParameters.PROLIFIC_PID;
+// if (window.location.search.indexOf('PROLIFIC_PID') > -1) {
+//     subjectID = getQueryVariable('PROLIFIC_PID');
+// }
+// If no ID is present, generate one using random numbers - this is useful for testing
+if (subjectID == undefined) {
+    subjectID = 'test-' + Math.floor(Math.random() * (2000000 - 0 + 1)) + 0; 
+}
+//jatos.setStudySessionData({"ID": subjectID})
+
+// STUDY ID
+
+studyID = 'replication'
+// Save initial data
+if (!demo){
+
+    docRef = db.collection("safe_exploration").doc(studyID).collection('subjects').doc(uid);
+    //console.log(docRef)
+    docRef.set({
+        subjectID: subjectID,
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString()
+    }).catch(err => {
+            // If this fails for some reason, show an error
+            alert("Something went wrong, sorry. Please contact us on Prolific");
+            console.log(err);
+        })
+}
+
+jatos.setStudySessionData({"ID": subjectID,
+                         "uid" : uid
+})
+// jatos.studySessionData.valueOf()["ID"] = "kristin3000"
+//jatos.setStudySessionData({"ID": subjectID})
+
+
+start = Number(new Date()); // time how long they take for the questionnaires
+
+
+$(document.getElementById("questionnaire")).show()
+
+
+// Load questionnaires
+$.getJSON('questionnaires.json', function (data) {
+    // THis function creates the whole questionnaire
+    // document.getElementById("continue").style.display = "none"
+    questionnaire_data = data;
+
+    var fullurl = window.location.href;
+
+
+    // extract URL parameters (FROM: https://s3.amazonaws.com/mturk-public/externalHIT_v1.js)
+    function turkGetParam(name) {
+    var regexS = "[\?&]" + name + "=([^&#]*)";
+    var regex = new RegExp(regexS);
+    if (typeof fullurl == "undefined"){ // I added this part to the original code bc otherwise it would throw errors when running it locally
+
+        return Math.floor(Math.random() * 10000);
+
+    } else {
+        var tmpURL = fullurl;
+        var results = regex.exec(tmpURL);
+        if (results == null) {
+            return Math.floor(Math.random() * 10000);
+        } else {
+            return results[1];
+    }
+    }
+}
+
+    nextPage = "game.html?" + "PROLIFIC_PID=" + subjectID + '&UID=' + uid + '&STUDY=' + studyID;  // This passes the subjectID, Firebase UID, and Study ID to the next page;
+
+
+
+    // THis creates every questionnaire of interest
+    // A smarter way to do this would be to shuffle the keys of the questionnaire_data object
+    // and then loop through them, rather than creating them all individually as I've done here
+
+    createQuestionnaire(questionnaire_data.STICSA_T);
+    createQuestionnaire(questionnaire_data.CAPE)
+    createQuestionnaire(questionnaire_data.PID);
+
+
+    // This next section just deals with scrolling between items automatically (but not if we are scrolling through missed items)
+    
+    
+
+    // this makes it move to next question (had to put this piece of code here bc it needs the questionnaire element being displayed to work)
+    var forms = document.getElementsByName("fs_");
+
+    // for (i = 3; i < forms.length; i++) {
+    //     // Generate function to scroll to next question if we're not on the last question
+    //     if (i < forms.length - 1) {
+    //         forms[i].setAttribute("scrollPos", $(forms[i + 1]).offset().top - 200);
+
+    //         $(forms[i]).children().children().click(function () {
+    //             if (!submitted){ //if submit has been pressed, the other scroll on function in the getValues function does the job
+    //             $('html, body').animate({
+    //                 scrollTop: $(this).parent().parent().attr("scrollPos")
+    //             }, 400);
+
+                
+    //         }
+    //         });
+    //     }
+    // }
+
+    // Create the submit button
+    var submit = document.createElement('button');
+    submit.setAttribute("class", "submit_button");
+    submit.setAttribute("type", "button");
+    submit.setAttribute("id", "submit");
+    submit.append("Submit");
+
+    var submit_form = document.createElement("form");
+    submit_form.setAttribute("class", "submitContainer");
+    submit_form.appendChild(submit);
+    document.getElementById('questionnaires').appendChild(submit_form);
+
+    // Function to call when the submit button is clicked
+    document.getElementById('submit').onclick = getValues;
+
+});
+
+}
+
+
+
+
+</script>
+

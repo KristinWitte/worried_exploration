@@ -1,0 +1,77 @@
+ <!DOCTYPE html>
+ <html>
+     <head>
+        <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+        <!-- <script src="jatos.js"></script> -->
+         <title>Fishing game</title>
+         <meta charset="utf-8">
+         <link href="src/task.css" rel="stylesheet" type="text/css"></link>
+         <script>
+            // jatos.onLoad(function() {
+            // Start here with your code that uses jatos.js' variables and functions
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = 'src/index.js';
+            script.charset = 'utf-8';
+            document.head.appendChild(script);
+        //   });
+         </script>
+         
+     </head>
+     <body>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <!-- <script src="https://browser.sentry-cdn.com/4.4.1/bundle.min.js" crossorigin="anonymous"></script> -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/random-js/1.0.8/random.min.js"></script>
+        <script src="src/prob.js/prob.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-auth.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-firestore.js"></script>
+        <script>
+            // Your web app's Firebase configuration
+            const firebaseConfig = {
+            apiKey: "AIzaSyC57RD8AugAR5JCG66O-AZFHRSAnRGD4Ow",
+            authDomain: "safe-exploration.firebaseapp.com",
+            projectId: "safe-exploration",
+            storageBucket: "safe-exploration.appspot.com",
+            messagingSenderId: "67274241604",
+            appId: "1:67274241604:web:6efa85b6e4c9df0adf2e11"
+            };
+    
+        //     // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+        //   </script>
+        <!-- <script type="module" src="src/index.js" charset="utf-8"></script> -->
+        <div class="instructions" id='instructions'></div>
+        <button class = "submit_button" id="comprehension" style="display: none">return to questions</button>
+        <div class="div" id="mainSection">
+            <header class="form__header" id="header"><h2 id="header_title" class="form__title"></h2></header>
+            <section class="mainInstructions" id="consent"></section>
+            <div class='krakenPresent' id='krakenPresent'></div>
+        
+        <div id = 'bonusRoundDiv' class='div' style='display:none; margin-left: 100px' >
+            <h2> How many fish are at this location? </h2>
+            
+            <input id='estimateSlider' class="input-range" type="range" value="50" min="0" max="100" step="1" style="width: 300px">
+            
+            <output class="score" id="output">50 fish</output><br><br>
+            <h2> How confident are you? </h2> 
+            
+            <input id='confidenceSlider' class="input-range" type="range" value="6" min="1" max="11" step="1" style="width: 300px;">
+            <br><br><br>
+            <div class="score" style = "padding-bottom: 0px; margin-bottom: 3px">
+                Least confident <span class="spacer" style="width: 100px; display: inline-block;"></span> Most confident
+            </div>
+            
+            
+        </div>
+        <div id=quizContainer style="display: none;">
+            <div id="quiz" style="display: none;" class = "form"></div>
+        <div id=submitContainer style="display: none;">
+            <button type="button" name="button" id = "submitComp" class = "compButton" style = 'display: none;'>Submit</button> 
+         </div>
+        </div>
+    </div>  
+     </body>
+
+     
+ </html>

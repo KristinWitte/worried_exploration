@@ -4,3 +4,10 @@ plots/.DS_Store
 .Rproj.user
 *.Rproj
 /Study1/NUOz
+replication_study/download_data.ipynb
+replication_study/safe-exploration-firebase-key.json
+littleFixes.R
+rebuttal_analyses_plots.R
+/replication_study_all
+/Study1_all
+/Study2_all
