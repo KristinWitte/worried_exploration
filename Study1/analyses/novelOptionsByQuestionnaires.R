@@ -4,7 +4,7 @@ library(brms)
 
 ###### importing and formatting data #########
 setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
-load("Study1/master.Rda")
+load("Study1/data/master.Rda")
 
 
 # simple coding instead of dummy coding (recoding the condition (krakenPres) from 0 and 1 (safe and risky) to -0.5, 0.5)

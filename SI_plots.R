@@ -117,7 +117,8 @@ main <- rbind(STICSAcog$fixed[rownames(STICSAcog$fixed) == "STICSAcog", ],
               RRQ$fixed[rownames(RRQ$fixed) == "RRQ", ], 
               PID5_negativeAffect$fixed[rownames(PID5_negativeAffect$fixed) == "PID5_negativeAffect", ])
 
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
@@ -149,7 +150,8 @@ main <- rbind(beta_STICSAcog$fixed[rownames(beta_STICSAcog$fixed) == "STICSAcog"
               beta_IUS$fixed[rownames(beta_IUS$fixed) == "IUS", ], 
               beta_RRQ$fixed[rownames(beta_RRQ$fixed) == "RRQ", ], 
               beta_PID5$fixed[rownames(beta_PID5$fixed) == "PID5", ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
@@ -162,7 +164,8 @@ interact <- rbind(beta_STICSAcog$fixed[rownames(beta_STICSAcog$fixed) == "STICSA
                   beta_IUS$fixed[rownames(beta_IUS$fixed) == "IUS:kraken_present", ], 
                   beta_RRQ$fixed[rownames(beta_RRQ$fixed) == "RRQ:kraken_present", ], 
                   beta_PID5$fixed[rownames(beta_PID5$fixed) == "PID5:kraken_present", ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
@@ -180,7 +183,8 @@ main <- rbind(tau_STICSAcog$fixed[rownames(tau_STICSAcog$fixed) == "STICSAcog", 
               tau_IUS$fixed[rownames(tau_IUS$fixed) == "IUS", ], 
               tau_RRQ$fixed[rownames(tau_RRQ$fixed) == "RRQ", ], 
               tau_PID5$fixed[rownames(tau_PID5$fixed) == "PID5", ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
@@ -196,7 +200,8 @@ interact <- rbind(tau_STICSAcog$fixed[rownames(tau_STICSAcog$fixed) == "STICSAco
                   tau_IUS$fixed[rownames(tau_IUS$fixed) == "IUS:kraken_present", ], 
                   tau_RRQ$fixed[rownames(tau_RRQ$fixed) == "RRQ:kraken_present", ], 
                   tau_PID5$fixed[rownames(tau_PID5$fixed) == "PID5:kraken_present", ])
-df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
+df <- data.frame(var = c("cognitive anxiety", "somatic anxiety", "depressivity", "intolerance to uncertainty", "rumination", "negative affect"), 
+                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
 stargazer(df, type = "latex", summary = F, rownames = F, column.labels  = c("Predictor","beta", 
@@ -446,7 +451,7 @@ for (param in c("beta", "ls", "tau")){
 version <- "strict" # strict vs loose inclusion criteria (default is strict)
 
 
-load(paste0("replication_study/analysis/QsNUO",version,".Rda"))
+load(paste0("replication_study/analyses/QsNUO",version,".Rda"))
 # the model results in QsNUO[version].Rda can be obtained by executing
 # replication_study/analyses/novelOptionsByQuestionnaires.R
 
@@ -479,7 +484,7 @@ interact <- rbind(STICA_T_c$fixed[rownames(STICA_T_c$fixed) == "STICA_T_c:kraken
 df <- data.frame(var = c("cognitive anxiety*condition", "somatic anxiety*condition", 
                          "depressivity*condition", "intolerance to uncertainty*condition", 
                          "rumination*condition", "negative affect*condition", "worry*condition"), 
-                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+                 Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
 
 df$var = factor(df$var, levels = df$var, labels = df$var)
 
@@ -491,9 +496,9 @@ stargazer(df, type = "latex", summary = F, rownames = F,
 
 
 #### parameter estimates by questionnaire
-version <- "strict"
+version <- "loose"
 
-files <- list.files(path = "replication_study/analysis/parameterEstimatesCB_n")
+files <- list.files(path = "replication_study/analyses/parameterEstimatesCB_n")
 files <- files[grepl(version, files)]
 # these files can be optained by executing
 # replication_study/analyses/parameterEstimatesByQuestionnaires.R
@@ -537,13 +542,13 @@ for (param in c("beta", "ls", "tau")){
                     C$fixed[rownames(C$fixed) == "CAPE:kraken_present", ], 
                     I$fixed[rownames(I$fixed) == "IUS:kraken_present", ], 
                     R$fixed[rownames(R$fixed) == "RRQ:kraken_present", ], 
-                    Pi$fixed[rownames(Pi$fixed) == "PID:kraken_present", ],
+                    Pi$fixed[rownames(Pi$fixed) == "PID5:kraken_present", ],
                     Ps$fixed[rownames(Ps$fixed) == "PSWQ:kraken_present", ])
   
   df <- data.frame(var = c("cognitive anxiety*condition", "somatic anxiety*condition", 
                            "depressivity*condition", "intolerance to uncertainty*condition", 
                            "rumination*condition", "negative affect*condition", "worry*condition"), 
-                   Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+                   Estimate = interact[ ,1], lower = interact[ ,3], upper = interact[ ,4])
   
   df$var = factor(df$var, levels = df$var, labels = df$var)
   
@@ -732,23 +737,33 @@ for (param in c("eta", "ls", "tau")){
   
 
 ################### model comparison plots ##############
-# to obtain the groupBMC results for all studies can be obtained using the code in
+#  groupBMC results for all studies can be obtained using the code in
 # groupBMC.py
 
 
 ############ model comparison St 2
 
-df <- read.csv("Study2/analyses/groupBMC_results_incl_cb_n.csv")
+# df <- read.csv("Study2/analyses/groupBMC_results_incl_cb_n.csv")
+# 
+# df$cond <- factor(df$cond, levels = c(0,1), labels = c("control", "intervention"))
+# df$tp <- factor(df$tp, levels = c(0,1), labels = c("pre", "post"))
 
-df$cond <- factor(df$cond, levels = c(0,1), labels = c("control", "intervention"))
-df$tp <- factor(df$tp, levels = c(0,1), labels = c("pre", "post"))
-
+df <- read.csv("Study2/analyses/modelling/logp_df.csv") %>% 
+  rbind(read.csv("Study2/analyses/modelling/logp_df_baseline.csv")) %>% 
+  mutate(cond = factor(cond, levels = c(0,1), labels = c("control", "intervention")),
+         tp = factor(tp, levels = c(0,1), labels = c("pre", "post"))) %>% 
+  group_by(model, ID, cond, tp) %>% 
+  summarise(logp = mean(logp)) %>% 
+  group_by(model, cond, tp) %>% 
+  summarise(exceedance_probability = mean(logp),
+            se = se(logp))
 
 
 p1 <- ggplot(df, aes(y=exceedance_probability, x=model, fill=cond)) +
   #bars
   geom_bar(position= position_dodge(0.8), stat="identity", width=0.75)+
   scale_fill_manual(values = c(control, red), name = "Condition")+
+  geom_errorbar(aes(ymin = exceedance_probability - se, ymax = exceedance_probability+se), position = "dodge")+
   # scale_color_manual(values = c(gold, red), name = "Condition")+
   #title
   labs(title = "Model Comparison", 
@@ -760,7 +775,7 @@ p1 <- ggplot(df, aes(y=exceedance_probability, x=model, fill=cond)) +
   #adjust text size
   theme(text = element_text(size=16)) +
   #theme(legend.position = "none")+
-  scale_x_discrete(labels = c("POS", "Random", expression("CB"~beta~"=0"), "full CB", "novelty bonus"))+
+  #scale_x_discrete(labels = c("POS", "Random", expression("CB"~beta~"=0"), "full CB", "novelty bonus"))+
   #scale_x_discrete(labels = c("POS", "POS-T", "random", expression("CB_"~beta~"0"), expression("CB_"~lambda~"0")))+
   #scale_y_continuous(expand = c(0.01, 0))+
   
@@ -795,14 +810,14 @@ ggplot(exc, aes(y=exceedance_probability, x=model, fill=as.factor(kraken_present
 
 ######## replication study
 
-exc <- read.csv("replication_study/analyses/groupBMC_results_incl_cb_n.csv")  %>% 
+exc <- read.csv("replication_study/analyses/groupBMC_results_incl_cb_n.csv")  %>%
   mutate(kraken_present = factor(kraken_present, levels = c(0,1), labels = c("safe", "risky")))
 
 ggplot(exc, aes(y = exceedance_probability, x=model, fill=kraken_present)) +
   #bars
   geom_bar(position= position_dodge(0.8), stat="identity", width=0.75)+
   scale_fill_manual(values = c(darkBlue, red), name = "Condition")+
-  #geom_errorbar(aes(ymin = logp-se, ymax = logp+se), width = 0.2) +
+  #geom_errorbar(aes(ymin = logd-se, ymax = logd+se), width = 0.2) +
   #title
   labs(title = "Model Comparison", 
        x = "model", 
@@ -812,11 +827,51 @@ ggplot(exc, aes(y = exceedance_probability, x=model, fill=kraken_present)) +
   #scale_x_discrete(labels = c("safe", "risky"))+
   #adjust text size
   theme(text = element_text(size=16)) +
-  theme(legend.position = "none")+
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1))+
   scale_x_discrete(labels = c("random", expression("CB_"~beta~"=0"), "full CB", "novelty bonus"))+
   scale_y_continuous(expand = c(0.01, 0))+
   facet_grid(cols = vars(kraken_present))
 
+exc <- read.csv("replication_study/analyses/model_fitting/results/logp_df.csv")  %>% 
+  rbind(read.csv("replication_study/analyses/model_fitting/results/logp_df_baseline.csv")) %>% 
+  mutate(kraken_present = factor(kraken_present, levels = c(0,1), labels = c("safe", "risky"))) %>% 
+  group_by(model, ID, kraken_present) %>% 
+  summarise(logp = mean(logp)) %>% 
+  group_by(model, kraken_present) %>% 
+  summarise(logd = mean(logp),
+            se = se(logp)) %>% 
+  mutate(model = recode(model, "ucb_lcb_nboth" = "jointly shuffled",
+                        "ucb_lcb_nrewards" = "rewards shuffled",
+                        "ucb_lcb_nchoices" = "choices shuffled",
+                        "ucb_lcb_nseparate" = "separately shuffled",
+                        "ucb_lcb_n" = "novelty bonus",
+                        "ucb_lcb" = "full CB",
+                        "ucb_b0" = "CB beta = 0"))
+
+ggplot(exc, aes(y = logd, x=model, fill=kraken_present)) +
+  #bars
+  geom_bar(position= position_dodge(0.8), stat="identity", width=0.75)+
+  scale_fill_manual(values = c(darkBlue, red), name = "Condition")+
+  geom_errorbar(aes(ymin = logd-se, ymax = logd+se), width = 0.2) +
+  #title
+  labs(title = "Model Comparison", 
+       x = "model", 
+       y = expression("log likelihood"[CV]))+
+  theme_classic(base_size = 15) +
+  #scale_y_continuous(limits = c(0,3), expand = c(0, 0)) +
+  #scale_x_discrete(labels = c("safe", "risky"))+
+  #adjust text size
+  theme(text = element_text(size=16)) +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1))+
+  scale_x_discrete(limits = c("full CB", "CB beta = 0", "novelty bonus", "random", 
+                              "jointly shuffled", "rewards shuffled", "choices shuffled", "separately shuffled"))+
+  scale_y_continuous(expand = c(0.01, 0))+
+  facet_grid(cols = vars(kraken_present))
+
+
+  
 
 ############# parameter recovery plots ##########
 

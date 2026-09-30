@@ -332,3 +332,59 @@ fig3
 
 ggsave("plots/Fig3Novelty.png", plot = fig3, width = 19, height = 3.5)
 
+######### Figure 4: Null results #########
+
+
+version <- "strict"
+load(paste0("replication_study/analyses/QsNUO", version, ".Rda"))
+
+vars <- c("cognitive anxiety", "somatic anxiety", "depressivity",
+          "intolerance to uncertainty", "rumination", "negative affect", "worry")
+
+# collect() takes one row per model and returns a data frame for one panel.
+collect <- function(models, terms, panel) {
+  rows <- do.call(rbind, Map(function(m, tm) {
+    r <- m$fixed[rownames(m$fixed) == tm, ]
+    if (length(r) == 0) {
+      warning("term not found: ", tm)
+      r <- rep(NA_real_, ncol(m$fixed))
+    }
+    r
+  }, models, terms))
+  data.frame(var = factor(vars, levels = rev(vars)),
+             Estimate = rows[, 1], lower = rows[, 3], upper = rows[, 4],
+             panel = panel)
+}
+
+## panels A and B: P(novel)
+qMod  <- list(STICA_T_c, STICA_T_s, CAPE, IUS, RRQ, PID, PSWQ)
+qName <- c("STICA_T_c", "STICA_T_s", "CAPE", "IUS", "RRQ", "PID", "PSWQ")
+
+pA <- collect(qMod, qName, "A  Questionnaires on P(novel)")
+pB <- collect(qMod, paste0(qName, ":krakenPresent"), "B  Interaction with task condition")
+
+## panels C and D: eta
+files <- list.files(path = "replication_study/analyses/parameterEstimatesCB_n")
+files <- files[grepl(version, files) & grepl("eta", files)]
+for (i in files) load(paste0("replication_study/analyses/parameterEstimatesCB_n/", i))
+
+param <- "beta"
+eName <- c("STICSAcog", "STICSAsoma", "CAPE", "IUS", "RRQ", "PID5", "PSWQ")
+eMod  <- lapply(paste(param, eName, sep = "_"), get, envir = .GlobalEnv)
+
+pC <- collect(eMod, eName, "C  Questionnaires on eta")
+pD <- collect(eMod, paste0(eName, ":kraken_present"), "D  Interaction with task condition")
+
+## one data frame, one plot
+dat <- rbind(pA, pB, pC, pD)
+dat$panel <- factor(dat$panel, levels = unique(dat$panel))
+
+fig4 <- errorBarPlot(dat, title = "Null effects in the replication study") +
+  facet_wrap(~ panel, nrow = 1, scales = "free_x")
+
+
+
+fig4
+  
+ggsave("plots/main_paper/Fig4.png", plot = fig4, width = 16, height = 3.5)
+

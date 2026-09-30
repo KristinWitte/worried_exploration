@@ -6,7 +6,7 @@ library(brms)
 
 ########## loading data and prepping it ########
 setwd("/Users/kristinwitte/Documents/GitHub/worried_exploration")
-load("Study1/master.Rda")
+load("Study1/data/master.Rda")
 
 df <- read.csv(paste("Study1/estimatesCB_n.csv", sep = ""))
 
@@ -56,7 +56,7 @@ equation <- as.formula(paste(combs$p[task_id], "~", combs$q[task_id], "* kraken_
 
 model <- brm(equation,
              data = df,
-             iter = 40000,
+             iter = 4000,
              cores = 4,
              chains = 4, 
              control = list(adapt_delta = 0.99))

@@ -11,3 +11,8 @@ rebuttal_analyses_plots.R
 /replication_study_all
 /Study1_all
 /Study2_all
+.positai
+CLAUDE.md
+/paper
+*.Rda
+*.Rdata

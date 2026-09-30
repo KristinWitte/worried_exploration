@@ -21,8 +21,8 @@ df$RRQ <- scale(Master$RRQ[match(df$ID, Master$ID)])
 df$PID5 <- scale(Master$PID[match(df$ID, Master$ID)])
 df$PSWQ <- scale(Master$PSWQ[match(df$ID, Master$ID)])
 df$age <- scale(as.numeric(Master$age[match(df$ID, Master$ID)]))
-df$gender <- Master$gender[match(df$ID, Master$ID)]
-df$gender <- factor(df$gender, levels = df$gender, labels = df$gender)
+df$gender <- Master$Sex_0[match(df$ID, Master$ID)]
+#df$gender <- factor(df$gender, levels = df$gender, labels = df$gender)
 df$edu <- scale(Master$edu[match(df$ID, Master$ID)])
 df$kraken_present <- df$kraken_present-0.5 # effect coding
 
