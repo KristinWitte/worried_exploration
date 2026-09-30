@@ -132,7 +132,7 @@ summary(model) # nope still no effect
 ##########  regression of nervousness on model parameters ###########
 
 
-estims <- read.csv(paste0("replication_study/analysis/estimatesCB_n_",version,".csv")) %>% 
+estims <- read.csv(paste0("replication_study/data/estimatesCB_n_",version,".csv")) %>% 
   mutate(krakenPresent = kraken_present) %>% 
   left_join( Master %>% 
                       group_by(ID, krakenPresent, age, Sex_0, edu) %>% 
