@@ -11,7 +11,7 @@ load(paste0("replication_study/data/Master_", version,".Rda"))
 ######## cor of nervousness and PSWQ #########
 
 
-questionnaires <- left_join(questionnaires, Master[Master$krakenPresent == 0, ] %>% 
+questionnaires <- left_join(questionnaires, Master %>%
                           group_by(ID) %>% 
                           summarise(nervous = mean(as.numeric(nervous), na.rm = T)), by = "ID")
 

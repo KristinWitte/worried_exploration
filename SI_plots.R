@@ -743,27 +743,16 @@ for (param in c("eta", "ls", "tau")){
 
 ############ model comparison St 2
 
-# df <- read.csv("Study2/analyses/groupBMC_results_incl_cb_n.csv")
-# 
-# df$cond <- factor(df$cond, levels = c(0,1), labels = c("control", "intervention"))
-# df$tp <- factor(df$tp, levels = c(0,1), labels = c("pre", "post"))
+df <- read.csv("Study2/analyses/groupBMC_results_incl_cb_n.csv")
 
-df <- read.csv("Study2/analyses/modelling/logp_df.csv") %>% 
-  rbind(read.csv("Study2/analyses/modelling/logp_df_baseline.csv")) %>% 
-  mutate(cond = factor(cond, levels = c(0,1), labels = c("control", "intervention")),
-         tp = factor(tp, levels = c(0,1), labels = c("pre", "post"))) %>% 
-  group_by(model, ID, cond, tp) %>% 
-  summarise(logp = mean(logp)) %>% 
-  group_by(model, cond, tp) %>% 
-  summarise(exceedance_probability = mean(logp),
-            se = se(logp))
+df$cond <- factor(df$cond, levels = c(0,1), labels = c("control", "intervention"))
+df$tp <- factor(df$tp, levels = c(0,1), labels = c("pre", "post"))
 
 
 p1 <- ggplot(df, aes(y=exceedance_probability, x=model, fill=cond)) +
   #bars
   geom_bar(position= position_dodge(0.8), stat="identity", width=0.75)+
   scale_fill_manual(values = c(control, red), name = "Condition")+
-  geom_errorbar(aes(ymin = exceedance_probability - se, ymax = exceedance_probability+se), position = "dodge")+
   # scale_color_manual(values = c(gold, red), name = "Condition")+
   #title
   labs(title = "Model Comparison", 
@@ -775,14 +764,16 @@ p1 <- ggplot(df, aes(y=exceedance_probability, x=model, fill=cond)) +
   #adjust text size
   theme(text = element_text(size=16)) +
   #theme(legend.position = "none")+
-  #scale_x_discrete(labels = c("POS", "Random", expression("CB"~beta~"=0"), "full CB", "novelty bonus"))+
+  scale_x_discrete(labels = c("POS", "random", expression("CB_"~beta~"=0"), "full CB", "novelty bonus"))+
   #scale_x_discrete(labels = c("POS", "POS-T", "random", expression("CB_"~beta~"0"), expression("CB_"~lambda~"0")))+
-  #scale_y_continuous(expand = c(0.01, 0))+
-  
+  scale_y_continuous(expand = c(0.01, 0))+
+
   #  geom_jitter(data = fit, aes(x = model, y= logp), alpha = 0.1, width = 0.1)+
   facet_grid(cols = vars(tp))
 
 p1
+ggsave("plots/SI/SIFig1ModelCompStudy2.png", plot = p1, width = 12, height = 5)
+ggsave("plots/SI/SIFig1ModelCompStudy2.svg", plot = p1, width = 12, height = 5)
 
 
 ################ St1 model comparison
@@ -790,7 +781,7 @@ p1
 exc <- read.csv("Study1/analyses/groupBMC_results_incl_cb_n.csv")
 exc$kraken_present <- factor(exc$kraken_present, levels = c(0,1), labels = c("safe", "risky"))
 
-ggplot(exc, aes(y=exceedance_probability, x=model, fill=as.factor(kraken_present))) +
+p <- ggplot(exc, aes(y=exceedance_probability, x=model, fill=as.factor(kraken_present))) +
   #bars
   geom_bar(position= position_dodge(0.8), stat="identity", width=0.75)+
   scale_fill_manual(values = c(darkBlue, red), name = "Condition")+
@@ -807,13 +798,16 @@ ggplot(exc, aes(y=exceedance_probability, x=model, fill=as.factor(kraken_present
   scale_x_discrete(labels = c("POS", "random", expression("CB_"~beta~"=0"), "full CB", "novelty bonus"))+
   scale_y_continuous(expand = c(0.01, 0))+
   facet_grid(cols = vars(kraken_present))
+p
+ggsave("plots/SI/SIFig2ModelComparisonSt1.png", plot = p, width = 10, height = 5)
+ggsave("plots/SI/SIFig2ModelComparisonSt1.svg", plot = p, width = 10, height = 5)
 
 ######## replication study
 
 exc <- read.csv("replication_study/analyses/groupBMC_results_incl_cb_n.csv")  %>%
   mutate(kraken_present = factor(kraken_present, levels = c(0,1), labels = c("safe", "risky")))
 
-ggplot(exc, aes(y = exceedance_probability, x=model, fill=kraken_present)) +
+p <- ggplot(exc,aes(y = exceedance_probability, x=model, fill=kraken_present)) +
   #bars
   geom_bar(position= position_dodge(0.8), stat="identity", width=0.75)+
   scale_fill_manual(values = c(darkBlue, red), name = "Condition")+
@@ -832,8 +826,11 @@ ggplot(exc, aes(y = exceedance_probability, x=model, fill=kraken_present)) +
   scale_x_discrete(labels = c("random", expression("CB_"~beta~"=0"), "full CB", "novelty bonus"))+
   scale_y_continuous(expand = c(0.01, 0))+
   facet_grid(cols = vars(kraken_present))
+p
+ggsave("plots/SI/SIModelComparisonStudy3.png", plot = p, width = 10, height = 5)
+ggsave("plots/SI/SIModelComparisonStudy3.svg", plot = p, width = 10, height = 5)
 
-exc <- read.csv("replication_study/analyses/model_fitting/results/logp_df.csv")  %>% 
+exc <- read.csv("replication_study/analyses/model_fitting/results/logp_df.csv")  %>%
   rbind(read.csv("replication_study/analyses/model_fitting/results/logp_df_baseline.csv")) %>% 
   mutate(kraken_present = factor(kraken_present, levels = c(0,1), labels = c("safe", "risky"))) %>% 
   group_by(model, ID, kraken_present) %>% 
@@ -1691,3 +1688,37 @@ study1 <- read.csv("replication_study/analyses/model_fitting/results/identifiabi
   select(Data, Model, Condition, WAIC, SE, best)
 
 stargazer(study1, summary = F, rownames = F)
+
+
+############## distance between subsequent clicks by nervousness (Study 2 and Study 3) ##########
+# same regressions as Figure 2C and 2F but with the distance between subsequent clicks as dependent variable
+# these files can be obtained by executing Study2/analyses/distanceNervous.R and replication_study/analyses/distanceNervous.R
+
+## Study 2
+load("Study2/analyses/distance_nervousByInterv.Rda")
+
+nerv <- summary(model)
+selected_rows <- c("nervous:cond:tp", "cond:tp", "nervous:tp", "nervous:prev_z",
+                   "nervous:cond", "prev_z", "cond", "nervous")
+main <- nerv$fixed[selected_rows, ]
+df <- data.frame(var = c("nervousness*intervention","intervention", "nervousness*time point",
+                         "nervousness * prev.reward", "nervousness*condition","prev. reward","condition","nervousness"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p1 <- errorBarPlot(df, title = "Effects of nervousness on distance")
+
+## Study 3
+load("replication_study/analyses/distance_nerv_strict.Rda")
+
+selected_rows <- c("nervous:prev_z", "krakenPresent:nervous", "prev_z", "krakenPresent", "nervous")
+main <- nerv_dist$fixed[selected_rows, ]
+df <- data.frame(var = c("nervousness* prev. reward","nervousness * condition","prev. reward", "condition", "nervousness"), 
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p2 <- errorBarPlot(df, title = "Predicting distance in replication")
+
+p <- ggarrange(p1, p2, ncol = 2, labels = c("A", "B"), align = "h")
+p
+
+ggsave("plots/SI/SIDistanceNervous.png", plot = p, width = 14, height = 5)
+ggsave("plots/SI/SIDistanceNervous.svg", plot = p, width = 14, height = 5)

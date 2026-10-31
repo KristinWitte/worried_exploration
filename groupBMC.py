@@ -1,54 +1,48 @@
 ############### get exceedance probabilities based on log likelihoods using the groupBMC package by sichao
+# run from the repo root
 
 import numpy as np
 import pandas as pd
 #from groupBMC.groupBMC import GroupBMC
 from groupBMC2 import GroupBMC
 
-## load log likelihoods
-logp = pd.read_csv('model_fitting/results/logp_df.csv')
+# study: (cross-validated log likelihoods, condition columns, output file)
+studies = {
+    "Study1": ("Study1/analyses/modelFitting/logp_df.csv", ["kraken_present"], "Study1/analyses/groupBMC_results_incl_cb_n.csv"),
+    "Study2": ("Study2/analyses/modelling/logp_df.csv", ["cond", "tp"], "Study2/analyses/groupBMC_results_incl_cb_n.csv"),
+    "Study3": ("replication_study/analyses/model_fitting/results/logp_df.csv", ["kraken_present"], "replication_study/analyses/groupBMC_results_incl_cb_n.csv"),
+}
 
-logp['logp'].replace(0, float('nan'), inplace=True)
+# the Study 1 log likelihoods include participants that were excluded from all other analyses
+study1_ids = pd.read_csv("Study1/data/master.csv")["ID"].unique()
 
-# First ddply
-df = logp.groupby(['model', 'kraken_present', 'ID']).agg(se=('logp', 'std'), logp=('logp', 'mean')).reset_index()
+for study, (path, keys, out) in studies.items():
+    logp = pd.read_csv(path)
+    if study == "Study1":
+        logp = logp[logp["ID"].isin(study1_ids)]
 
-# Second ddply
-df = df.groupby(['model', 'kraken_present']).agg(se=('se', 'std'), logp=('logp', 'mean')).reset_index()
+    # a log likelihood of 0 marks a fold without any trials for that participant (same for all models)
+    logp = logp[logp["logp"] != 0]
 
+    # log evidence per participant: summed held-out log likelihood across folds
+    L_df = logp.pivot_table(index=keys + ["ID"], columns="model", values="logp", aggfunc="sum")
+    assert not L_df.isna().any().any(), "a model is missing folds"
 
+    # mean held-out log likelihood per fold, for plotting
+    fold_mean = logp.groupby(["model"] + keys + ["ID"])["logp"].mean().reset_index()
+    df = fold_mean.groupby(["model"] + keys).agg(logp=("logp", "mean"), se=("logp", "sem"), N=("ID", "nunique")).reset_index()
 
+    results = []
+    for cell, L_cell in L_df.groupby(level=keys):
+        cell = cell if isinstance(cell, tuple) else (cell,)
+        # group BMC needs a K x N matrix: one row per model, one column per participant
+        result = GroupBMC(L_cell.to_numpy().T).get_result()
+        results.append(pd.DataFrame({"model": L_cell.columns, **dict(zip(keys, cell)),
+                                     "exceedance_probability": result.exceedance_probability,
+                                     "protected_exceedance_probability": result.protected_exceedance_probability}))
 
-# Filter out unwanted 'model' values
-unwanted_models = ["pos_l", "ucb_b0_l", "ucb_lcb_l"]
-#df = df[~df['model'].isin(unwanted_models)]
+    df = df.merge(pd.concat(results), on=["model"] + keys)
+    print(study)
+    print(df)
 
-df_safe = df[df['kraken_present'] == 0]
-df_risky = df[df['kraken_present'] == 1]
-
-L = np.array(df_safe['logp'])
-
-L = L.reshape(4,1)
-
-result = GroupBMC(L).get_result()
-print(result)
-
-df_safe['exceedance_probability'] = result.exceedance_probability
-
-L = np.array(df_risky['logp'])
-
-L = L.reshape(4,1)
-
-result = GroupBMC(L).get_result()
-
-df_risky['exceedance_probability'] = result.exceedance_probability
-
-print(df_safe)
-print(df_risky)
-
-# concatinate df_safe and df_risky into one dataframe
-df = pd.concat([df_safe, df_risky], ignore_index=True)
-
-# save df as csv
-df.to_csv('groupBMC_results_incl_cb_n.csv', index=False)
-
+    df.to_csv(out, index=False)

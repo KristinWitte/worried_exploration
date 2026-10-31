@@ -14,5 +14,7 @@ rebuttal_analyses_plots.R
 .positai
 CLAUDE.md
 /paper
-*.Rda
 *.Rdata
+replication_study/analyses/brm_NUO_Q.Rda
+Study1/analyses/QNUO_brms_model.Rda
+Study1/analyses/CAPE_depressed.Rdata

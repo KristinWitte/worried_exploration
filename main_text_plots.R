@@ -50,10 +50,11 @@ control <- "#E39189"
 
 ################ functions ##############
 
-errorBarPlot <- function(df, title = waiver(), xlabel = expression(beta~"-Coefficients with 95%HDI"), ylabel = element_blank()){
+errorBarPlot <- function(df, title = waiver(), subtitle = waiver(), xlabel = expression(beta~"-Coefficients with 95%HDI"), ylabel = element_blank()){
   #' visualising a range of effects as errorbars
   #' @param dataset data.frame, has to have specific format and variable naming
   #' @param title str (optional)
+  #' @param subtitle str (optional)
   #' @param xlabel str, label of x axis (optional), defaults to "beta coefficients with 95%HDI
   #' @param ylabel str (optional), defaults to element_blank
   #' @return ggplot object
@@ -69,8 +70,9 @@ errorBarPlot <- function(df, title = waiver(), xlabel = expression(beta~"-Coeffi
     geom_errorbar(aes(xmin = lower, xmax = upper, size = size), width = 0.5) +
     theme(legend.position = "none") +
     geom_vline(xintercept = 0) + 
-    labs(title = title, 
-          x = xlabel, 
+    labs(title = title,
+          subtitle = subtitle,
+          x = xlabel,
           y = ylabel)+
     scale_size_manual(breaks = c(0,1), values = c(1, 1.8))
   
@@ -145,20 +147,21 @@ ggsave(plot = fig1, filename = "plots/Fig1CDE.png", width = 19, height = 4)
 
 ############# Figure 2: Model agnostic results ##############
 
-################ A: Study 1 P(novel)
+################ D: Study 3 P(novel)
 
-d2<-ddply(Master1[Master1$blocknr != 6, ], ~krakenPres+ID, summarize, mu=mean(unique, na.rm=TRUE), se=se(na.omit(unique)))
+d2<-ddply(Master3, ~krakenPresent+ID, summarize, mu=mean(unique, na.rm=TRUE), se=se(na.omit(unique)))
 n_lines <- nrow(d2)/2
-p1 <- ggplot(d2, aes(y=mu, x=krakenPres)) +
-  geom_half_violin(side = c("l", "r"), aes(fill = krakenPres))+
+p1 <- ggplot(d2, aes(y=mu, x=krakenPresent)) +
+  geom_half_violin(side = c("l", "r"), aes(fill = krakenPresent))+
   geom_boxplot(width = 0.05) +
-  geom_line(aes(x = rep(c(1.2, 1.8), each = n_lines), group = ID), alpha = 0.2) + 
-  geom_jitter(aes(x = rep(c(1.1, 1.9), each = n_lines), color = krakenPres), alpha = 0.2, width = 0.05)+
+  geom_line(aes(x = rep(c(1.2, 1.8), each = n_lines), group = ID), alpha = 0.2) +
+  geom_jitter(aes(x = rep(c(1.1, 1.9), each = n_lines), color = krakenPresent), alpha = 0.2, width = 0.05)+
   scale_fill_manual(name = "Condition", values = c(darkBlue, red))+
   scale_color_manual(name = "Condition", values = c(darkBlue, red))+
   #title
-  labs(title = "Proportion of novel options selected", 
-       x = "Condition", 
+  labs(title = "Proportion of novel options selected",
+       subtitle = "Study 3",
+       x = "Condition",
        y = "P(novel)")+
   theme(legend.position = "none")+
   #scale_x_discrete(labels = c("safe", "risky"))+
@@ -167,7 +170,7 @@ p1 <- ggplot(d2, aes(y=mu, x=krakenPres)) +
 
 p1
 
-################# B: Study 3: nervousness in conditions
+################# E: Study 3: nervousness in conditions
 
 d2<-ddply(Master3, ~krakenPresent+ID, summarize, mu=mean(as.numeric(nervous), na.rm=TRUE), se=se(na.omit(nervous)))
 p2 <- ggplot(d2, aes(y=mu, x=krakenPresent)) +
@@ -178,8 +181,9 @@ p2 <- ggplot(d2, aes(y=mu, x=krakenPresent)) +
   scale_fill_manual(name = "Condition", values = c(darkBlue, red))+
   scale_color_manual(name = "Condition", values = c(darkBlue, red))+
   #title
-  labs(title = "Nervousness", 
-       x = "Condition", 
+  labs(title = "Nervousness",
+       subtitle = "Study 3",
+       x = "Condition",
        y = "Nervousness")+
   theme(legend.position = "none")+
   #scale_x_discrete(labels = c("safe", "risky"))+
@@ -188,21 +192,21 @@ p2 <- ggplot(d2, aes(y=mu, x=krakenPresent)) +
 
 p2
 
-########### C: Study 3:  P(novel) by nervousness
+########### F: Study 3:  P(novel) by nervousness
 
-load("replication_study/analysis/nerv_pnovel_strict.Rda")
-view(nerv_pnovel$fixed)
+load("replication_study/analyses/nerv_pnovel_strict.Rda")
+nerv_pnovel$fixed
 selected_rows <- c("nervous:prev_z", "krakenPresent:nervous", "prev_z", "krakenPresent", "nervous")
 main <- nerv_pnovel$fixed[selected_rows, ]
-df <- data.frame(var = c("nervousness* prev. reward","nervousness * condition","prev. reward", "condition", "nervousness"), 
+df <- data.frame(var = c("nervousness* prev. reward","nervousness * condition","prev. reward", "condition (safe/risky)", "nervousness"), 
                  Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 
-p3 <- errorBarPlot(df, title = "Predicting P(novel) in replication")
+p3 <- errorBarPlot(df, title = "Predicting P(novel)", subtitle = "Study 3")
 
 p3
 
 
-########## D: Study 2 nervousness over rounds of the task
+########## A: Study 2 nervousness over rounds of the task
 nervous$round <- rep(c(2, 4, 6, 7, 9, 11), nrow(nervous)/6)
 df <- ddply(nervous, ~cond+round, summarise, se = se(nervous), nervousness = meann(nervous))
 df$block <- rep(c(-5, -3, -1, 1, 3, 5),2)
@@ -212,16 +216,17 @@ Nerv <- ggplot(df, aes(block, nervousness, color = cond)) + geom_line(size = 1.5
   geom_point(size = 1.5) +
   geom_vline(xintercept = 0)+
   labs(title = "Nervousness",
+       subtitle = "Study 2",
        x = "Block since intervention",
        y = "Nervousness ± SE")+
   scale_x_continuous(breaks = c(seq(-5,-1), seq(1,5)))+
   scale_color_manual(name = "Condition", values = c(control, red))+
-  theme(legend.position = c(0.2, 0.2),
+  theme(legend.position = c(0.2, 0.25),
         axis.title.y = element_text(margin = margin("l" = 7, "r"= 5)),
         legend.background = element_rect(fill = "transparent"))
 
 Nerv
-############## E: St2 P(novel) over rounds of the task
+############## B: St2 P(novel) over rounds of the task
 
 df <- ddply(Master, ~cond+block, summarise, se = se(unique), Punique = mean(na.omit(unique)))
 df$block <- rep(c(seq(-5,-1), seq(1,5)),2)
@@ -231,18 +236,19 @@ NUO <- ggplot(df, aes(block, Punique, color = cond)) + geom_line(size = 1.5) +
   geom_point(size = 1.5) +
   geom_vline(xintercept = 0)+
   labs(title = "Proportion of novel options selected",
+       subtitle = "Study 2",
        x = "Block since intervention",
        y = "P(novel) ± SE")+
   scale_x_continuous(breaks = c(seq(-5,-1), seq(1,5)))+
   scale_color_manual(name = "Condition", values = c(control, red))+
-  theme(legend.position = c(0.2, 0.2),
+  theme(legend.position = c(0.2, 0.25),
         axis.title.y = element_text(margin = margin("l" = 22, "r" = 5)),
         legend.background = element_rect(fill = "transparent"))
 
 NUO
 
-############### F: Study 2 exploration ~ nervousness
-load("Study2/analysis/nervousByInterv.Rda")
+############### C: Study 2 exploration ~ nervousness
+load("Study2/analyses/nervousByInterv.Rda")
 
 nerv <- summary(model)
 nerv$fixed
@@ -250,35 +256,75 @@ selected_rows <- c("nervous:cond:tp", "cond:tp", "nervous:tp", "nervous:prev_z",
                    "nervous:cond", "prev_z", "cond", "nervous")
 main <- nerv$fixed[selected_rows, ]
 df <- data.frame(var = c("nervousness*intervention","intervention", "nervousness*time point",
-                         "nervousness * prev.reward", "nervousness*condition","prev. reward","condition","nervousness"), 
+                         "nervousness * prev.reward", "nervousness*condition","prev. reward","condition (interv./control)","nervousness"), 
                  Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 
-p4 <- errorBarPlot(df, title = "Effects of nervousness on P(novel)")
+p4 <- errorBarPlot(df, title = "Effects of nervousness on P(novel)", subtitle = "Study 2")
 
 p4
 
 
 # first put together plots that will be underneath each other to align them bc otherwise the alignment is super difficult
-left <- ggarrange(p1, Nerv, nrow = 2, heights = c(0.8, 1), labels = c("A", "D"), align = "hv")
+left <- ggarrange(Nerv, p1, nrow = 2, heights = c(1, 0.8), labels = c("A", "D"), align = "hv")
 left
 
-middle <- ggarrange(p2, NUO, nrow = 2, heights = c(0.8, 1), labels = c("B", "E"),align = "hv")
+middle <- ggarrange(NUO, p2, nrow = 2, heights = c(1, 0.8), labels = c("B", "E"),align = "hv")
 middle
 
-right <- ggarrange(p3, p4, nrow = 2, heights = c(0.8,1),labels = c("C", "F"), align = "hv")
+right <- ggarrange(p4, p3, nrow = 2, heights = c(1, 0.8),labels = c("C", "F"), align = "hv")
 right
 
 fig2 <- ggarrange(left, middle, right, ncol = 3,widths = c(0.5, 0.5, 0.8), align = "hv")
 fig2
 
-ggsave("plots/Fig2.png", plot = fig2, width = 19, height = 6)
+ggsave("plots/main_paper/Fig2.png", plot = fig2, width = 19, height = 6.3)
+
+############# Figure 2 with nervousness split into within- and between-person effects
+
+############### C: Study 2 exploration ~ within- and between-person nervousness
+load("Study2/analyses/nervous_within_between.Rda")
+nerv_wb$fixed
+selected_rows <- c("nerv_w:cond:tp", "cond:tp:nerv_b", "cond:tp", "nerv_w:prev_z", "nerv_b:prev_z",
+                   "prev_z", "cond", "nerv_w", "nerv_b")
+main <- nerv_wb$fixed[selected_rows, ]
+df <- data.frame(var = c("nerv. (within)*intervention", "nerv. (between)*intervention", "intervention",
+                         "nerv. (within)*prev.reward", "nerv. (between)*prev.reward",
+                         "prev. reward", "condition (interv./control)", "nervousness (within)", "nervousness (between)"),
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p4_wb <- errorBarPlot(df, title = "Effects of nervousness on P(novel)", subtitle = "Study 2")
+
+p4_wb
+
+########### F: Study 3:  P(novel) by within- and between-person nervousness
+load("replication_study/analyses/nervous_within_between_strict.Rda")
+nerv_wb$fixed
+selected_rows <- c("nerv_w:prev_z", "nerv_b:prev_z", "krakenPresent:nerv_w", "krakenPresent:nerv_b",
+                   "prev_z", "krakenPresent", "nerv_w", "nerv_b")
+main <- nerv_wb$fixed[selected_rows, ]
+df <- data.frame(var = c("nerv. (within)*prev. reward", "nerv. (between)*prev. reward",
+                         "nerv. (within)*condition", "nerv. (between)*condition",
+                         "prev. reward", "condition (safe/risky)", "nervousness (within)", "nervousness (between)"),
+                 Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
+
+p3_wb <- errorBarPlot(df, title = "Predicting P(novel)", subtitle = "Study 3")
+
+p3_wb
+
+right_wb <- ggarrange(p4_wb, p3_wb, nrow = 2, heights = c(1, 0.8), labels = c("C", "F"), align = "hv")
+right_wb
+
+fig2_wb <- ggarrange(left, middle, right_wb, ncol = 3, widths = c(0.5, 0.5, 0.8), align = "hv")
+fig2_wb
+
+ggsave("plots/main_paper/Fig2_within_between.png", plot = fig2_wb, width = 19, height = 8.5)
 
 
 ##################### Figure 3: Modelling results ################# 
 
 ################ A Study 3: eta ~ nervous
 
-load("replication_study/analysis/estims_nervous.Rda")
+load("replication_study/analyses/estims_nervous_strict.Rda")
 
 eta$fixed
 selected_rows <- c("krakenPresent:nervous", "krakenPresent", "nervous")
@@ -287,7 +333,7 @@ main
 df <- data.frame(var = c("nervousness*condition","condition","nervousness"), 
                  Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 
-p1 <- errorBarPlot(df, title = expression("Effects of nervousness on"~eta))
+p1 <- errorBarPlot(df, title = expression("Effects of nervousness on"~eta), subtitle = "Study 3")
 
 p1
 
@@ -298,7 +344,7 @@ main
 df <- data.frame(var = c("nervousness*condition","condition","nervousness"), 
                  Estimate = main[ ,1], lower = main[ ,3], upper = main[ ,4])
 
-p2 <- errorBarPlot(df, title = expression("Effects of nervousness on"~lambda))
+p2 <- errorBarPlot(df, title = expression("Effects of nervousness on"~lambda), subtitle = "Study 3")
 
 p2
 
@@ -319,6 +365,7 @@ dd <- ddply(df1, ~tp+cond,summarise, eta = meann(beta), se = se(beta))
 p3 <-  ggplot(dd, aes(tp, eta, color = cond, group = cond)) + geom_line(size = 1.5) +
   geom_linerange(aes(ymin = eta -se, ymax = eta+se), size = 1.5) +
   labs(title = expression("Intervention effect on"~eta),
+       subtitle = "Study 2",
        x = "Timepoint",
        y = expression(eta~"parameter"))+
   scale_color_manual(name = "Condition", values = c(control, red))+
@@ -330,7 +377,7 @@ p3
 fig3 <-  ggarrange(p3,p1,p2, ncol = 3, nrow = 1, labels = "AUTO", widths = c(0.8,1,1), align = "h")
 fig3
 
-ggsave("plots/Fig3Novelty.png", plot = fig3, width = 19, height = 3.5)
+ggsave("plots/main_paper/Fig3Novelty.png", plot = fig3, width = 19, height = 4)
 
 ######### Figure 4: Null results #########
 
